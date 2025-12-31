@@ -1,0 +1,25 @@
+{
+  "name": "matcha-42",
+  "version": "1.0.0",
+  "description": "Matcha is a full-stack dating app featuring user profiles, interest-based matching, geolocation, real-time chat, and live notifications. Built with secure authentication and responsive design for an interactive user experience.",
+  "main": "index.js",
+"scripts": {
+  "format": "prettier --write \"client/src/**/*.{ts,tsx,css}\" \"server/src/**/*.ts\"",
+  "format:check": "prettier --check \"client/src/**/*.{ts,tsx,css}\" \"server/src/**/*.ts\""
+},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BastienErard/Matcha-42.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/BastienErard/Matcha-42/issues"
+  },
+  "homepage": "https://github.com/BastienErard/Matcha-42#readme",
+  "devDependencies": {
+    "prettier": "^3.7.4"
+  }
+}
