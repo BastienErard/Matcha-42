@@ -118,3 +118,63 @@ export const verifyEmail = async (req: Request, res: Response): Promise<void> =>
 		res.status(500).json({ error: 'Erreur serveur' });
 	}
 };
+
+// POST /api/auth/forgot-password
+export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
+	const { email } = req.body;
+
+	if (!email) {
+		res.status(400).json({ error: 'Email requis' });
+		return;
+	}
+
+	try {
+		const resetToken = await authService.forgotPassword(email);
+
+		res.json({
+			message: 'Si cet email existe, un lien de réinitialisation a été envoyé.',
+		});
+
+		// TODO: Envoyer l'email avec le token si resetToken n'est pas null
+		if (resetToken) {
+			console.log(`Reset token for ${email}: ${resetToken}`);
+		}
+
+	} catch (error) {
+		console.error('Erreur forgotPassword:', error);
+		res.status(500).json({ error: 'Erreur serveur' });
+	}
+};
+
+// POST /api/auth/reset-password
+export const resetPassword = async (req: Request, res: Response): Promise<void> => {
+	const { token, password } = req.body;
+
+	if (!token || !password) {
+		res.status(400).json({ error: 'Token et nouveau mot de passe requis' });
+		return;
+	}
+
+	// Validation mot de passe (même règles que register)
+	const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+	if (!passwordRegex.test(password)) {
+		res.status(400).json({
+			error: 'Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre',
+		});
+		return;
+	}
+
+	try {
+		const success = await authService.resetPassword(token, password);
+
+		if (!success) {
+			res.status(400).json({ error: 'Token invalide ou expiré' });
+			return;
+		}
+
+		res.json({ message: 'Mot de passe réinitialisé avec succès' });
+	} catch (error) {
+		console.error('Erreur resetPassword:', error);
+		res.status(500).json({ error: 'Erreur serveur' });
+	}
+};

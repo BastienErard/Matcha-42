@@ -115,3 +115,44 @@ export const login = async (
 export const logout = async (userId: number): Promise<void> => {
 	await pool.query('UPDATE users SET is_online = FALSE WHERE id = ?', [userId]);
 };
+
+// Génère un token de reset et l'enregistre en BDD
+export const forgotPassword = async (email: string): Promise<string | null> => {
+	// Vérifie que l'email existe
+	const [rows] = await pool.query<User[]>(
+		'SELECT id FROM users WHERE email = ?',
+		[email]
+	);
+
+	if (rows.length === 0) return null;
+
+	const resetToken = crypto.randomUUID();
+	const expires = new Date(Date.now() + 3600000); // Expire dans 1 heure
+
+	await pool.query(
+		'UPDATE users SET reset_password_token = ?, reset_password_expires = ? WHERE email = ?',
+		[resetToken, expires, email]
+	);
+
+	return resetToken;
+};
+
+// Réinitialise le mot de passe via le token
+export const resetPassword = async (token: string, newPassword: string): Promise<boolean> => {
+	// Vérifie que le token existe et n'est pas expiré
+	const [rows] = await pool.query<User[]>(
+		'SELECT id FROM users WHERE reset_password_token = ? AND reset_password_expires > NOW()',
+		[token]
+	);
+
+	if (rows.length === 0) return false;
+
+	const hashedPassword = await hashPassword(newPassword);
+
+	await pool.query(
+		'UPDATE users SET password_hash = ?, reset_password_token = NULL, reset_password_expires = NULL WHERE id = ?',
+		[hashedPassword, rows[0].id]
+	);
+
+	return true;
+};
