@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as authService from '../services/auth.service';
+import { validatePassword } from '../utils/password-validator';
 
 // POST /api/auth/register
 export const register = async (req: Request, res: Response): Promise<void> => {
@@ -18,12 +19,10 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 		return;
 	}
 
-	// Validation mot de passe (min 8 chars, 1 majuscule, 1 minuscule, 1 chiffre)
-	const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
-	if (!passwordRegex.test(password)) {
-		res.status(400).json({
-			error: 'Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre',
-		});
+	// Validation mot de passe
+	const passwordValidation = validatePassword(password);
+	if (!passwordValidation.isValid) {
+		res.status(400).json({ error: passwordValidation.error });
 		return;
 	}
 
@@ -149,12 +148,10 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
 		return;
 	}
 
-	// Validation mot de passe (même règles que register)
-	const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
-	if (!passwordRegex.test(password)) {
-		res.status(400).json({
-			error: 'Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre',
-		});
+	// Validation mot de passe
+	const passwordValidation = validatePassword(password);
+	if (!passwordValidation.isValid) {
+		res.status(400).json({ error: passwordValidation.error });
 		return;
 	}
 
