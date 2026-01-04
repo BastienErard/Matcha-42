@@ -3,7 +3,7 @@ import * as authService from '../services/auth.service';
 
 // POST /api/auth/register
 export const register = async (req: Request, res: Response): Promise<void> => {
-	const { email, username, password, firstName, lastName } = req.body;
+	const { email, username, password, firstName, lastName, language } = req.body;
 
 	// Validation basique des champs requis
 	if (!email || !username || !password || !firstName || !lastName) {
@@ -34,20 +34,19 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 			return;
 		}
 		if (await authService.usernameExists(username)) {
-			res.status(409).json({ error: 'Ce nom d\'utilisateur est déjà pris' });
+			res.status(409).json({ error: "Ce nom d'utilisateur est déjà pris" });
 			return;
 		}
 
-		// Crée l'utilisateur
-		const { userId, verificationToken } = await authService.createUser({
+		// Crée l'utilisateur et envoie l'email de vérification
+		const { userId } = await authService.createUser({
 			email,
 			username,
 			password,
 			firstName,
 			lastName,
+			language,
 		});
-
-		// TODO: Envoyer l'email de vérification avec le token
 
 		res.status(201).json({
 			message: 'Inscription réussie. Vérifiez votre email pour activer votre compte.',
@@ -129,17 +128,12 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
 	}
 
 	try {
-		const resetToken = await authService.forgotPassword(email);
+		await authService.forgotPassword(email);
 
+		// On renvoie toujours un succès pour ne pas révéler si l'email existe
 		res.json({
 			message: 'Si cet email existe, un lien de réinitialisation a été envoyé.',
 		});
-
-		// TODO: Envoyer l'email avec le token si resetToken n'est pas null
-		if (resetToken) {
-			console.log(`Reset token for ${email}: ${resetToken}`);
-		}
-
 	} catch (error) {
 		console.error('Erreur forgotPassword:', error);
 		res.status(500).json({ error: 'Erreur serveur' });

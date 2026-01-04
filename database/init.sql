@@ -33,6 +33,7 @@ CREATE TABLE users (
 	reset_password_expires DATETIME,
 	last_login DATETIME,
 	is_online BOOLEAN DEFAULT FALSE,
+	preferred_language ENUM('fr', 'en') DEFAULT 'fr',
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	INDEX idx_email (email),

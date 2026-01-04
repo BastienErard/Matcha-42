@@ -2,6 +2,8 @@ import pool from '../config/database';
 import { hashPassword, comparePassword } from '../utils/hash';
 import { generateToken } from '../utils/jwt';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
+import { sendVerificationEmail, sendResetPasswordEmail } from './email.service';
+import { Language } from '../templates/emails';
 
 // Interface représentant un utilisateur en BDD
 interface User extends RowDataPacket {
@@ -12,6 +14,7 @@ interface User extends RowDataPacket {
 	first_name: string;
 	last_name: string;
 	is_verified: boolean;
+	preferred_language: Language;
 }
 
 // Données requises pour l'inscription
@@ -21,6 +24,7 @@ interface RegisterData {
 	password: string;
 	firstName: string;
 	lastName: string;
+	language?: Language;
 }
 
 // Données requises pour la connexion
@@ -46,17 +50,14 @@ export const usernameExists = async (username: string): Promise<boolean> => {
 };
 
 // Crée un nouvel utilisateur
-export const createUser = async (
-	data: RegisterData
-): Promise<{ userId: number; verificationToken: string }> => {
+export const createUser = async (data: RegisterData): Promise<{ userId: number }> => {
 	const hashedPassword = await hashPassword(data.password);
-
-	// Token unique pour la vérification par email
 	const verificationToken = crypto.randomUUID();
+	const lang = data.language || 'fr';
 
 	const [result] = await pool.query<ResultSetHeader>(
-		`INSERT INTO users (email, username, password_hash, first_name, last_name, verification_token)
-     VALUES (?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO users (email, username, password_hash, first_name, last_name, verification_token, preferred_language)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
 		[
 			data.email,
 			data.username,
@@ -64,10 +65,14 @@ export const createUser = async (
 			data.firstName,
 			data.lastName,
 			verificationToken,
+			lang,
 		]
 	);
 
-	return { userId: result.insertId, verificationToken };
+	// Envoie l'email de vérification
+	await sendVerificationEmail(data.email, verificationToken, lang);
+
+	return { userId: result.insertId };
 };
 
 // Vérifie le compte via le token reçu par email
@@ -117,24 +122,27 @@ export const logout = async (userId: number): Promise<void> => {
 };
 
 // Génère un token de reset et l'enregistre en BDD
-export const forgotPassword = async (email: string): Promise<string | null> => {
-	// Vérifie que l'email existe
+export const forgotPassword = async (email: string): Promise<boolean> => {
 	const [rows] = await pool.query<User[]>(
-		'SELECT id FROM users WHERE email = ?',
+		'SELECT id, preferred_language FROM users WHERE email = ?',
 		[email]
 	);
 
-	if (rows.length === 0) return null;
+	if (rows.length === 0) return false;
 
+	const user = rows[0];
 	const resetToken = crypto.randomUUID();
-	const expires = new Date(Date.now() + 3600000); // Expire dans 1 heure
+	const expires = new Date(Date.now() + 3600000);
 
 	await pool.query(
 		'UPDATE users SET reset_password_token = ?, reset_password_expires = ? WHERE email = ?',
 		[resetToken, expires, email]
 	);
 
-	return resetToken;
+	// Envoie l'email de réinitialisation
+	await sendResetPasswordEmail(email, resetToken, user.preferred_language);
+
+	return true;
 };
 
 // Réinitialise le mot de passe via le token
