@@ -2,6 +2,7 @@ import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import pool from './config/database';
+import authRoutes from './routes/auth.routes';
 
 // Charge les variables d'environnement depuis .env
 dotenv.config();
@@ -12,6 +13,9 @@ const PORT = process.env.PORT || 3000;
 // Middlewares
 app.use(cors());
 app.use(express.json()); // Parse le JSON des requêtes entrantes
+
+// Routes
+app.use('/api/auth', authRoutes);
 
 // Route de test + test l'accès à MySQL
 app.get('/api/health', async (_req: Request, res: Response) => {
