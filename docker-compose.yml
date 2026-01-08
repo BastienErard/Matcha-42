@@ -28,6 +28,7 @@ services:
     volumes:
       - ./server:/app
       - /app/node_modules
+      - ./uploads:/app/uploads
     environment:
       - PORT=${PORT}
       - MYSQL_HOST=database
@@ -42,6 +43,7 @@ services:
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASS=${SMTP_PASS}
       - SMTP_FROM=${SMTP_FROM}
+        - UPLOAD_DIR=/app/uploads
     depends_on:
       database:
         condition: service_healthy

@@ -130,3 +130,4 @@ export const getLikers = async (req: Request, res: Response): Promise<void> => {
 		res.status(500).json({ error: 'SERVER_ERROR' });
 	}
 };
+

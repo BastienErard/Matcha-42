@@ -3,6 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import pool from './config/database';
 import authRoutes from './routes/auth.routes';
+import profileRoutes from './routes/profile.routes';
+import photoRoutes from './routes/photo.routes';
 
 // Charge les variables d'environnement depuis .env
 dotenv.config();
@@ -16,6 +18,8 @@ app.use(express.json()); // Parse le JSON des requêtes entrantes
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/photos', photoRoutes);
 
 // Route de test + test l'accès à MySQL
 app.get('/api/health', async (_req: Request, res: Response) => {

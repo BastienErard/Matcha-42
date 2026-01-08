@@ -24,3 +24,7 @@ Thumbs.db
 
 # Docker
 mysql_data/
+
+# Uploads
+uploads/*
+!uploads/.gitkeep
