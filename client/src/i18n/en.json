@@ -1,0 +1,68 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "or": "or"
+  },
+  "auth": {
+    "login": "Log in",
+    "register": "Sign up",
+    "logout": "Log out",
+    "quit": "Quit",
+    "email": "Email address",
+    "username": "Username",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "forgotPassword": "Forgot password?",
+    "resetPassword": "Reset password",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "verifyEmail": "Check your email",
+    "verifyEmailSent": "A verification email has been sent to your address."
+  },
+  "landing": {
+    "tagline": "Find love, not compromises.",
+    "cta": "Get started",
+    "discover": "Discover"
+  },
+  "nav": {
+    "discover": "Discover",
+    "search": "Search",
+    "messages": "Messages",
+    "profile": "Profile",
+    "notifications": "Notifications"
+  },
+  "footer": {
+    "copyright": "© 2025 Matcha",
+    "madeWith": "Made with ❤️ by Thomas & Bastien"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "toggle": "Toggle theme"
+  },
+  "errors": {
+    "MISSING_REQUIRED_FIELDS": "Please fill in all required fields.",
+    "INVALID_EMAIL_FORMAT": "Invalid email format.",
+    "EMAIL_ALREADY_EXISTS": "This email address is already in use.",
+    "PASSWORD_TOO_SHORT": "Password must be at least 8 characters.",
+    "PASSWORD_NO_UPPERCASE": "Password must contain at least one uppercase letter.",
+    "PASSWORD_NO_LOWERCASE": "Password must contain at least one lowercase letter.",
+    "PASSWORD_NO_NUMBER": "Password must contain at least one number.",
+    "PASSWORD_TOO_COMMON": "This password is too common.",
+    "INVALID_CREDENTIALS": "Invalid credentials.",
+    "SERVER_ERROR": "Server error. Please try again."
+  },
+  "notFound": {
+  "title": "Page not found",
+  "message": "This page doesn't exist or has been moved."
+}
+}

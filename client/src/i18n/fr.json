@@ -1,0 +1,68 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "error": "Une erreur est survenue",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "confirm": "Confirmer",
+    "back": "Retour",
+    "next": "Suivant",
+    "or": "ou"
+  },
+  "auth": {
+    "login": "Se connecter",
+    "register": "S'inscrire",
+    "logout": "Se déconnecter",
+    "quit": "Quitter",
+    "email": "Adresse email",
+    "username": "Nom d'utilisateur",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "forgotPassword": "Mot de passe oublié ?",
+    "resetPassword": "Réinitialiser le mot de passe",
+    "noAccount": "Pas encore de compte ?",
+    "hasAccount": "Déjà un compte ?",
+    "verifyEmail": "Vérifiez votre email",
+    "verifyEmailSent": "Un email de vérification a été envoyé à votre adresse."
+  },
+  "landing": {
+    "tagline": "Trouvez l'amour, pas les compromis.",
+    "cta": "Commencer",
+    "discover": "Découvrir"
+  },
+  "nav": {
+    "discover": "Découvrir",
+    "search": "Recherche",
+    "messages": "Messages",
+    "profile": "Profil",
+    "notifications": "Notifications"
+  },
+  "footer": {
+    "copyright": "© 2025 Matcha",
+    "madeWith": "Fait avec ❤️ par Thomas & Bastien"
+  },
+  "theme": {
+    "light": "Clair",
+    "dark": "Sombre",
+    "toggle": "Changer de thème"
+  },
+  "errors": {
+    "MISSING_REQUIRED_FIELDS": "Veuillez remplir tous les champs obligatoires.",
+    "INVALID_EMAIL_FORMAT": "Format d'email invalide.",
+    "EMAIL_ALREADY_EXISTS": "Cette adresse email est déjà utilisée.",
+    "PASSWORD_TOO_SHORT": "Le mot de passe doit contenir au moins 8 caractères.",
+    "PASSWORD_NO_UPPERCASE": "Le mot de passe doit contenir au moins une majuscule.",
+    "PASSWORD_NO_LOWERCASE": "Le mot de passe doit contenir au moins une minuscule.",
+    "PASSWORD_NO_NUMBER": "Le mot de passe doit contenir au moins un chiffre.",
+    "PASSWORD_TOO_COMMON": "Ce mot de passe est trop courant.",
+    "INVALID_CREDENTIALS": "Identifiants incorrects.",
+    "SERVER_ERROR": "Erreur serveur. Veuillez réessayer."
+  },
+  "notFound": {
+  "title": "Page introuvable",
+  "message": "Cette page n'existe pas ou a été déplacée."
+}
+}

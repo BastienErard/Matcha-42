@@ -25,7 +25,17 @@ export const getMyProfile = async (req: Request, res: Response): Promise<void> =
 // PUT /api/profile/me
 export const updateMyProfile = async (req: Request, res: Response): Promise<void> => {
 	const userId = req.user!.userId;
-	const { gender, sexualPreference, biography, birthDate, latitude, longitude, city, country, tags } = req.body;
+	const {
+		gender,
+		sexualPreference,
+		biography,
+		birthDate,
+		latitude,
+		longitude,
+		city,
+		country,
+		tags,
+	} = req.body;
 
 	// Validation des champs obligatoires du profil
 	if (!gender || !sexualPreference || !biography || !birthDate) {
@@ -130,4 +140,3 @@ export const getLikers = async (req: Request, res: Response): Promise<void> => {
 		res.status(500).json({ error: 'SERVER_ERROR' });
 	}
 };
-

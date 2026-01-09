@@ -1,1 +1,70 @@
 @import 'tailwindcss';
+
+/* === LIGHT MODE (défaut) === */
+@theme {
+	--color-primary: #e63946;
+	--color-primary-hover: #c1121f;
+	--color-primary-light: #f8d7da;
+
+	--color-surface: #fafafa;
+	--color-surface-elevated: #ffffff;
+	--color-surface-muted: #f4f4f5;
+
+	--color-text-primary: #1a1a1a;
+	--color-text-secondary: #525252;
+	--color-text-muted: #a3a3a3;
+	--color-text-inverse: #ffffff;
+
+	--color-border: #e5e5e5;
+	--color-border-strong: #d4d4d4;
+
+	--color-success: #22c55e;
+	--color-error: #ef4444;
+	--color-warning: #f59e0b;
+}
+
+/* === DARK MODE === */
+.dark {
+	--color-surface: #0a0a0a;
+	--color-surface-elevated: #171717;
+	--color-surface-muted: #262626;
+
+	--color-text-primary: #fafafa;
+	--color-text-secondary: #a3a3a3;
+	--color-text-muted: #737373;
+	--color-text-inverse: #0a0a0a;
+
+	--color-border: #262626;
+	--color-border-strong: #404040;
+
+	--color-primary-light: #7f1d1d;
+}
+
+/* === STYLES DE BASE === */
+body {
+	background-color: var(--color-surface);
+	color: var(--color-text-primary);
+	font-family:
+		system-ui,
+		-apple-system,
+		BlinkMacSystemFont,
+		'Segoe UI',
+		Roboto,
+		sans-serif;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+/* Transitions fluides pour le changement de thème */
+* {
+	transition:
+		background-color 0.2s ease,
+		border-color 0.2s ease,
+		color 0.2s ease;
+}
+
+/* Focus visible pour l'accessibilité */
+:focus-visible {
+	outline: 2px solid var(--color-primary);
+	outline-offset: 2px;
+}

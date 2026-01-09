@@ -56,10 +56,10 @@ export const addPhoto = async (
 
 	// Si c'est la première photo, la définir comme photo de profil
 	if (isFirst) {
-		await pool.query(
-			'UPDATE profiles SET profile_picture_id = ? WHERE user_id = ?',
-			[result.insertId, userId]
-		);
+		await pool.query('UPDATE profiles SET profile_picture_id = ? WHERE user_id = ?', [
+			result.insertId,
+			userId,
+		]);
 	}
 
 	return { photoId: result.insertId, isFirst };
@@ -68,10 +68,10 @@ export const addPhoto = async (
 // Supprime une photo
 export const deletePhoto = async (userId: number, photoId: number): Promise<boolean> => {
 	// Vérifie que la photo appartient à l'utilisateur
-	const [rows] = await pool.query<Photo[]>(
-		'SELECT * FROM photos WHERE id = ? AND user_id = ?',
-		[photoId, userId]
-	);
+	const [rows] = await pool.query<Photo[]>('SELECT * FROM photos WHERE id = ? AND user_id = ?', [
+		photoId,
+		userId,
+	]);
 
 	if (rows.length === 0) return false;
 
@@ -97,10 +97,9 @@ export const deletePhoto = async (userId: number, photoId: number): Promise<bool
 		if (remaining.length > 0) {
 			await setProfilePicture(userId, remaining[0].id);
 		} else {
-			await pool.query(
-				'UPDATE profiles SET profile_picture_id = NULL WHERE user_id = ?',
-				[userId]
-			);
+			await pool.query('UPDATE profiles SET profile_picture_id = NULL WHERE user_id = ?', [
+				userId,
+			]);
 		}
 	}
 
@@ -118,42 +117,30 @@ export const setProfilePicture = async (userId: number, photoId: number): Promis
 	if (rows.length === 0) return false;
 
 	// Retire l'ancien statut de photo de profil
-	await pool.query(
-		'UPDATE photos SET is_profile_picture = FALSE WHERE user_id = ?',
-		[userId]
-	);
+	await pool.query('UPDATE photos SET is_profile_picture = FALSE WHERE user_id = ?', [userId]);
 
 	// Définit la nouvelle photo de profil
-	await pool.query(
-		'UPDATE photos SET is_profile_picture = TRUE WHERE id = ?',
-		[photoId]
-	);
+	await pool.query('UPDATE photos SET is_profile_picture = TRUE WHERE id = ?', [photoId]);
 
 	// Met à jour la référence dans profiles
-	await pool.query(
-		'UPDATE profiles SET profile_picture_id = ? WHERE user_id = ?',
-		[photoId, userId]
-	);
+	await pool.query('UPDATE profiles SET profile_picture_id = ? WHERE user_id = ?', [
+		photoId,
+		userId,
+	]);
 
 	return true;
 };
 
 // Récupère une photo par son ID
 export const getPhotoById = async (photoId: number): Promise<Photo | null> => {
-	const [rows] = await pool.query<Photo[]>(
-		'SELECT * FROM photos WHERE id = ?',
-		[photoId]
-	);
+	const [rows] = await pool.query<Photo[]>('SELECT * FROM photos WHERE id = ?', [photoId]);
 	return rows.length > 0 ? rows[0] : null;
 };
 
 // Réordonne les photos d'un utilisateur
 export const reorderPhotos = async (userId: number, photoIds: number[]): Promise<boolean> => {
 	// Vérifie que toutes les photos appartiennent à l'utilisateur
-	const [rows] = await pool.query<Photo[]>(
-		'SELECT id FROM photos WHERE user_id = ?',
-		[userId]
-	);
+	const [rows] = await pool.query<Photo[]>('SELECT id FROM photos WHERE user_id = ?', [userId]);
 
 	const userPhotoIds = rows.map((r) => r.id);
 	const allBelongToUser = photoIds.every((id) => userPhotoIds.includes(id));
@@ -164,10 +151,11 @@ export const reorderPhotos = async (userId: number, photoIds: number[]): Promise
 
 	// Met à jour l'ordre
 	for (let i = 0; i < photoIds.length; i++) {
-		await pool.query(
-			'UPDATE photos SET upload_order = ? WHERE id = ? AND user_id = ?',
-			[i, photoIds[i], userId]
-		);
+		await pool.query('UPDATE photos SET upload_order = ? WHERE id = ? AND user_id = ?', [
+			i,
+			photoIds[i],
+			userId,
+		]);
 	}
 
 	return true;

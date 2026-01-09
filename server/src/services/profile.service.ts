@@ -179,10 +179,9 @@ export const updateUserTags = async (userId: number, tagNames: string[]): Promis
 	}
 
 	// Récupère tous les IDs (existants + nouveaux)
-	const [allTags] = await pool.query<RowDataPacket[]>(
-		'SELECT id FROM tags WHERE name IN (?)',
-		[tagNames]
-	);
+	const [allTags] = await pool.query<RowDataPacket[]>('SELECT id FROM tags WHERE name IN (?)', [
+		tagNames,
+	]);
 
 	// Associe les tags à l'utilisateur
 	const userTagValues = allTags.map((t) => [userId, t.id]);
