@@ -74,9 +74,16 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 			return;
 		}
 
+		// Stocke le token dans un cookie httpOnly
+		res.cookie('token', result.token, {
+			httpOnly: true,
+			secure: process.env.NODE_ENV === 'production',
+			sameSite: 'strict',
+			maxAge: 7 * 24 * 60 * 60 * 1000, // 7 jours
+		});
+
 		res.json({
 			message: 'Connexion réussie',
-			token: result.token,
 			user: result.user,
 		});
 	} catch (error) {
@@ -91,6 +98,14 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
 		if (req.user) {
 			await authService.logout(req.user.userId);
 		}
+
+		// Supprime le cookie
+		res.clearCookie('token', {
+			httpOnly: true,
+			secure: process.env.NODE_ENV === 'production',
+			sameSite: 'strict',
+		});
+
 		res.json({ message: 'Déconnexion réussie' });
 	} catch (error) {
 		console.error('Erreur logout:', error);

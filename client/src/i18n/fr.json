@@ -59,7 +59,9 @@
     "PASSWORD_NO_NUMBER": "Le mot de passe doit contenir au moins un chiffre.",
     "PASSWORD_TOO_COMMON": "Ce mot de passe est trop courant.",
     "INVALID_CREDENTIALS": "Identifiants incorrects.",
-    "SERVER_ERROR": "Erreur serveur. Veuillez réessayer."
+    "SERVER_ERROR": "Erreur serveur. Veuillez réessayer.",
+    "SESSION_EXPIRED": "Votre session a expiré. Veuillez vous reconnecter.",
+    "NETWORK_ERROR": "Impossible de contacter le serveur."
   },
   "notFound": {
   "title": "Page introuvable",
