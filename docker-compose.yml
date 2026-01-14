@@ -43,7 +43,7 @@ services:
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASS=${SMTP_PASS}
       - SMTP_FROM=${SMTP_FROM}
-        - UPLOAD_DIR=/app/uploads
+      - UPLOAD_DIR=/app/uploads
     depends_on:
       database:
         condition: service_healthy

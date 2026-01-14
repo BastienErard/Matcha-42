@@ -24,28 +24,31 @@ export async function apiRequest<T>(
 			credentials: 'include',
 		});
 
-		// Session expirée ou invalide → redirection login
-		if (response.status === 401) {
-			// Ne redirige que si on n'est pas déjà sur une page auth
-			if (
-				!window.location.pathname.startsWith('/login') &&
-				!window.location.pathname.startsWith('/register')
-			) {
-				window.location.href = '/login';
-			}
-			return {
-				success: false,
-				error: { code: 'SESSION_EXPIRED' },
-			};
-		}
-
 		const data = await response.json();
 
 		if (!response.ok) {
+			// Si 401 sans code d'erreur spécifique, c'est une session expirée
+			if (response.status === 401 && !data.code) {
+				// Ne redirige que si on n'est pas sur une page auth
+				if (
+					!window.location.pathname.startsWith('/login') &&
+					!window.location.pathname.startsWith('/register') &&
+					!window.location.pathname.startsWith('/forgot-password') &&
+					!window.location.pathname.startsWith('/reset-password')
+				) {
+					window.location.href = '/login';
+				}
+				return {
+					success: false,
+					error: { code: 'SESSION_EXPIRED' },
+				};
+			}
+
+			// Sinon, on utilise le code d'erreur du backend
 			return {
 				success: false,
 				error: {
-					code: data.code || 'SERVER_ERROR',
+					code: data.code || data.error || 'SERVER_ERROR',
 				},
 			};
 		}

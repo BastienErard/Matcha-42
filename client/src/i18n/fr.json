@@ -26,7 +26,31 @@
     "noAccount": "Pas encore de compte ?",
     "hasAccount": "Déjà un compte ?",
     "verifyEmail": "Vérifiez votre email",
-    "verifyEmailSent": "Un email de vérification a été envoyé à votre adresse."
+    "verifyEmailSent": "Un email de vérification a été envoyé à votre adresse.",
+    "loginTitle": "Content de vous revoir",
+"loginSubtitle": "Connectez-vous pour retrouver vos matchs",
+"rememberMe": "Se souvenir de moi",
+"loginButton": "Se connecter",
+"loginLoading": "Connexion...",
+"registerTitle": "Rejoignez Matcha",
+"registerSubtitle": "Créez votre compte et trouvez l'amour",
+"registerButton": "Créer mon compte",
+"registerLoading": "Création...",
+"registerSuccess": "Compte créé ! Vérifiez votre email pour l'activer.",
+"emailVerified": "Email vérifié !",
+"emailVerifiedMessage": "Votre compte est maintenant actif. Vous pouvez vous connecter.",
+"emailVerificationFailed": "Vérification échouée",
+"forgotPasswordTitle": "Mot de passe oublié",
+"forgotPasswordSubtitle": "Entrez votre email pour recevoir un lien de réinitialisation",
+"forgotPasswordButton": "Envoyer le lien",
+"forgotPasswordLoading": "Envoi...",
+"forgotPasswordSuccess": "Si cet email existe, un lien de réinitialisation a été envoyé.",
+"resetPasswordTitle": "Nouveau mot de passe",
+"resetPasswordSubtitle": "Choisissez votre nouveau mot de passe",
+"newPassword": "Nouveau mot de passe",
+"resetPasswordButton": "Réinitialiser",
+"resetPasswordLoading": "Réinitialisation...",
+"resetPasswordSuccess": "Mot de passe réinitialisé avec succès !"
   },
   "landing": {
     "tagline": "Trouvez l'amour, pas les compromis.",
@@ -61,7 +85,14 @@
     "INVALID_CREDENTIALS": "Identifiants incorrects.",
     "SERVER_ERROR": "Erreur serveur. Veuillez réessayer.",
     "SESSION_EXPIRED": "Votre session a expiré. Veuillez vous reconnecter.",
-    "NETWORK_ERROR": "Impossible de contacter le serveur."
+    "NETWORK_ERROR": "Impossible de contacter le serveur.",
+    "USERNAME_ALREADY_EXISTS": "Ce nom d'utilisateur est déjà pris.",
+"INVALID_OR_EXPIRED_TOKEN": "Lien invalide ou expiré.",
+"PASSWORDS_DO_NOT_MATCH": "Les mots de passe ne correspondent pas.",
+"INVALID_USERNAME_FORMAT": "Le pseudo doit contenir entre 3 et 20 caractères (lettres, chiffres, underscore).",
+"SAME_PASSWORD": "Le nouveau mot de passe doit être différent de l'ancien."
+
+
   },
   "notFound": {
   "title": "Page introuvable",

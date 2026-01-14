@@ -26,7 +26,31 @@
     "noAccount": "Don't have an account?",
     "hasAccount": "Already have an account?",
     "verifyEmail": "Check your email",
-    "verifyEmailSent": "A verification email has been sent to your address."
+    "verifyEmailSent": "A verification email has been sent to your address.",
+    "loginTitle": "Welcome back",
+"loginSubtitle": "Log in to find your matches",
+"rememberMe": "Remember me",
+"loginButton": "Log in",
+"loginLoading": "Logging in...",
+"registerTitle": "Join Matcha",
+"registerSubtitle": "Create your account and find love",
+"registerButton": "Create my account",
+"registerLoading": "Creating...",
+"registerSuccess": "Account created! Check your email to activate it.",
+"emailVerified": "Email verified!",
+"emailVerifiedMessage": "Your account is now active. You can log in.",
+"emailVerificationFailed": "Verification failed",
+"forgotPasswordTitle": "Forgot password",
+"forgotPasswordSubtitle": "Enter your email to receive a reset link",
+"forgotPasswordButton": "Send reset link",
+"forgotPasswordLoading": "Sending...",
+"forgotPasswordSuccess": "If this email exists, a reset link has been sent.",
+"resetPasswordTitle": "New password",
+"resetPasswordSubtitle": "Choose your new password",
+"newPassword": "New password",
+"resetPasswordButton": "Reset password",
+"resetPasswordLoading": "Resetting...",
+"resetPasswordSuccess": "Password reset successfully!"
   },
   "landing": {
     "tagline": "Find love, not compromises.",
@@ -61,7 +85,13 @@
     "INVALID_CREDENTIALS": "Invalid credentials.",
     "SERVER_ERROR": "Server error. Please try again.",
     "SESSION_EXPIRED": "Your session has expired. Please log in again.",
-    "NETWORK_ERROR": "Unable to reach the server."
+    "NETWORK_ERROR": "Unable to reach the server.",
+    "USERNAME_ALREADY_EXISTS": "This username is already taken.",
+"INVALID_OR_EXPIRED_TOKEN": "Invalid or expired link.",
+"PASSWORDS_DO_NOT_MATCH": "Passwords do not match.",
+"INVALID_USERNAME_FORMAT": "Username must be 3-20 characters (letters, numbers, underscore only).",
+"SAME_PASSWORD": "New password must be different from the old one."
+
   },
   "notFound": {
   "title": "Page not found",

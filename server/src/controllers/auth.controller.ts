@@ -6,38 +6,33 @@ import { validatePassword } from '../utils/password-validator';
 export const register = async (req: Request, res: Response): Promise<void> => {
 	const { email, username, password, firstName, lastName, language } = req.body;
 
-	// Validation basique des champs requis
 	if (!email || !username || !password || !firstName || !lastName) {
-		res.status(400).json({ error: 'Tous les champs sont requis' });
+		res.status(400).json({ code: 'MISSING_REQUIRED_FIELDS' });
 		return;
 	}
 
-	// Validation format email
 	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 	if (!emailRegex.test(email)) {
-		res.status(400).json({ error: 'Format email invalide' });
+		res.status(400).json({ code: 'INVALID_EMAIL_FORMAT' });
 		return;
 	}
 
-	// Validation mot de passe
 	const passwordValidation = validatePassword(password);
 	if (!passwordValidation.isValid) {
-		res.status(400).json({ error: passwordValidation.error });
+		res.status(400).json({ code: passwordValidation.error });
 		return;
 	}
 
 	try {
-		// Vérifie si email/username déjà pris
 		if (await authService.emailExists(email)) {
-			res.status(409).json({ error: 'Cet email est déjà utilisé' });
+			res.status(409).json({ code: 'EMAIL_ALREADY_EXISTS' });
 			return;
 		}
 		if (await authService.usernameExists(username)) {
-			res.status(409).json({ error: "Ce nom d'utilisateur est déjà pris" });
+			res.status(409).json({ code: 'USERNAME_ALREADY_EXISTS' });
 			return;
 		}
 
-		// Crée l'utilisateur et envoie l'email de vérification
 		const { userId } = await authService.createUser({
 			email,
 			username,
@@ -48,12 +43,12 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 		});
 
 		res.status(201).json({
-			message: 'Inscription réussie. Vérifiez votre email pour activer votre compte.',
+			message: 'Registration successful',
 			userId,
 		});
 	} catch (error) {
 		console.error('Erreur register:', error);
-		res.status(500).json({ error: 'Erreur serveur' });
+		res.status(500).json({ code: 'SERVER_ERROR' });
 	}
 };
 
@@ -62,7 +57,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 	const { username, password } = req.body;
 
 	if (!username || !password) {
-		res.status(400).json({ error: 'Username et mot de passe requis' });
+		res.status(400).json({ code: 'MISSING_REQUIRED_FIELDS' });
 		return;
 	}
 
@@ -70,25 +65,24 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 		const result = await authService.login({ username, password });
 
 		if (!result) {
-			res.status(401).json({ error: 'Identifiants incorrects ou compte non vérifié' });
+			res.status(401).json({ code: 'INVALID_CREDENTIALS' });
 			return;
 		}
 
-		// Stocke le token dans un cookie httpOnly
 		res.cookie('token', result.token, {
 			httpOnly: true,
 			secure: process.env.NODE_ENV === 'production',
 			sameSite: 'strict',
-			maxAge: 7 * 24 * 60 * 60 * 1000, // 7 jours
+			maxAge: 7 * 24 * 60 * 60 * 1000,
 		});
 
 		res.json({
-			message: 'Connexion réussie',
+			message: 'Login successful',
 			user: result.user,
 		});
 	} catch (error) {
 		console.error('Erreur login:', error);
-		res.status(500).json({ error: 'Erreur serveur' });
+		res.status(500).json({ code: 'SERVER_ERROR' });
 	}
 };
 
@@ -99,17 +93,16 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
 			await authService.logout(req.user.userId);
 		}
 
-		// Supprime le cookie
 		res.clearCookie('token', {
 			httpOnly: true,
 			secure: process.env.NODE_ENV === 'production',
 			sameSite: 'strict',
 		});
 
-		res.json({ message: 'Déconnexion réussie' });
+		res.json({ message: 'Logout successful' });
 	} catch (error) {
 		console.error('Erreur logout:', error);
-		res.status(500).json({ error: 'Erreur serveur' });
+		res.status(500).json({ code: 'SERVER_ERROR' });
 	}
 };
 
@@ -121,14 +114,14 @@ export const verifyEmail = async (req: Request, res: Response): Promise<void> =>
 		const verified = await authService.verifyEmail(token);
 
 		if (!verified) {
-			res.status(400).json({ error: 'Token invalide ou expiré' });
+			res.status(400).json({ code: 'INVALID_OR_EXPIRED_TOKEN' });
 			return;
 		}
 
-		res.json({ message: 'Email vérifié avec succès. Vous pouvez maintenant vous connecter.' });
+		res.json({ message: 'Email verified successfully' });
 	} catch (error) {
 		console.error('Erreur verifyEmail:', error);
-		res.status(500).json({ error: 'Erreur serveur' });
+		res.status(500).json({ code: 'SERVER_ERROR' });
 	}
 };
 
@@ -137,20 +130,17 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
 	const { email } = req.body;
 
 	if (!email) {
-		res.status(400).json({ error: 'Email requis' });
+		res.status(400).json({ code: 'MISSING_REQUIRED_FIELDS' });
 		return;
 	}
 
 	try {
 		await authService.forgotPassword(email);
 
-		// On renvoie toujours un succès pour ne pas révéler si l'email existe
-		res.json({
-			message: 'Si cet email existe, un lien de réinitialisation a été envoyé.',
-		});
+		res.json({ message: 'Password reset email sent if account exists' });
 	} catch (error) {
 		console.error('Erreur forgotPassword:', error);
-		res.status(500).json({ error: 'Erreur serveur' });
+		res.status(500).json({ code: 'SERVER_ERROR' });
 	}
 };
 
@@ -159,14 +149,13 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
 	const { token, password } = req.body;
 
 	if (!token || !password) {
-		res.status(400).json({ error: 'Token et nouveau mot de passe requis' });
+		res.status(400).json({ code: 'MISSING_REQUIRED_FIELDS' });
 		return;
 	}
 
-	// Validation mot de passe
 	const passwordValidation = validatePassword(password);
 	if (!passwordValidation.isValid) {
-		res.status(400).json({ error: passwordValidation.error });
+		res.status(400).json({ code: passwordValidation.error });
 		return;
 	}
 
@@ -174,13 +163,13 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
 		const success = await authService.resetPassword(token, password);
 
 		if (!success) {
-			res.status(400).json({ error: 'Token invalide ou expiré' });
+			res.status(400).json({ code: 'INVALID_OR_EXPIRED_TOKEN' });
 			return;
 		}
 
-		res.json({ message: 'Mot de passe réinitialisé avec succès' });
+		res.json({ message: 'Password reset successful' });
 	} catch (error) {
 		console.error('Erreur resetPassword:', error);
-		res.status(500).json({ error: 'Erreur serveur' });
+		res.status(500).json({ code: 'SERVER_ERROR' });
 	}
 };
