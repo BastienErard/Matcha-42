@@ -13,6 +13,7 @@ dotenv.config();
 
 const app: Application = express();
 const PORT = process.env.PORT || 3000;
+const UPLOAD_DIR = process.env.UPLOAD_DIR || '/app/uploads';
 
 // Middlewares
 app.use(
@@ -23,6 +24,9 @@ app.use(
 );
 app.use(express.json());
 app.use(cookieParser());
+
+// Servir les fichiers statiques (photos uploadées)
+app.use('/uploads', express.static(UPLOAD_DIR));
 
 // Routes
 app.use('/api/auth', authRoutes);

@@ -1,10 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../../components/layout';
-import { Button, Input } from '../../components/ui';
+import { Button, Input, PhotoUploader } from '../../components/ui';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useAuth } from '../../hooks/useAuth';
-import { updateProfile, getTags, getMyProfile, completeOnboarding, type Tag } from '../../api';
+import {
+	updateProfile,
+	getTags,
+	getMyProfile,
+	completeOnboarding,
+	getMyPhotos,
+	type Tag,
+	type Photo,
+} from '../../api';
 
 const TOTAL_STEPS = 4;
 
@@ -17,6 +25,9 @@ export function OnboardingPage() {
 	const [isLoading, setIsLoading] = useState(false);
 	const [isInitialLoading, setIsInitialLoading] = useState(true);
 	const [error, setError] = useState('');
+
+	// Photos
+	const [photos, setPhotos] = useState<Photo[]>([]);
 
 	// Tags disponibles depuis l'API
 	const [availableTags, setAvailableTags] = useState<Tag[]>([]);
@@ -34,18 +45,19 @@ export function OnboardingPage() {
 	// Charger les données existantes et déterminer l'étape
 	useEffect(() => {
 		async function loadExistingData() {
-			// Si onboarding déjà terminé, rediriger
 			if (hasCompletedOnboarding) {
 				navigate('/discover', { replace: true });
 				return;
 			}
 
-			const result = await getMyProfile();
+			const [profileResult, photosResult] = await Promise.all([
+				getMyProfile(),
+				getMyPhotos(),
+			]);
 
-			if (result.success && result.data) {
-				const { profile, tags } = result.data;
+			if (profileResult.success && profileResult.data) {
+				const { profile, tags } = profileResult.data;
 
-				// Pré-remplit avec les données existantes
 				const existingData = {
 					gender: (profile.gender || '') as 'male' | 'female' | '',
 					sexualPreference: (profile.sexual_preference || '') as
@@ -60,7 +72,10 @@ export function OnboardingPage() {
 
 				setFormData(existingData);
 
-				// Détermine l'étape courante
+				if (photosResult.success && photosResult.data) {
+					setPhotos(photosResult.data.photos);
+				}
+
 				if (
 					!existingData.gender ||
 					!existingData.sexualPreference ||
@@ -162,15 +177,28 @@ export function OnboardingPage() {
 			}
 		}
 
-		// Sauvegarde l'étape actuelle
-		const saved = await saveCurrentStep();
-		if (!saved) return;
+		if (currentStep === 4) {
+			const hasProfilePic = photos.some((p) => p.is_profile_picture);
+			if (!hasProfilePic) {
+				setError('PROFILE_PICTURE_REQUIRED');
+				return;
+			}
+		}
+
+		// Sauvegarde l'étape actuelle (sauf étape 4, les photos sont déjà sauvées)
+		if (currentStep < 4) {
+			const saved = await saveCurrentStep();
+			if (!saved) return;
+		}
 
 		if (currentStep < TOTAL_STEPS) {
 			setCurrentStep(currentStep + 1);
 		} else {
 			// Étape 4 terminée → marquer l'onboarding comme complet
+			setIsLoading(true);
 			const completeResult = await completeOnboarding();
+			setIsLoading(false);
+
 			if (completeResult.success) {
 				await refreshProfile();
 				navigate('/discover');
@@ -187,7 +215,6 @@ export function OnboardingPage() {
 		}
 	}
 
-	// Affiche un loader pendant le chargement initial
 	if (isInitialLoading) {
 		return (
 			<Layout variant="onboarding">
@@ -210,7 +237,6 @@ export function OnboardingPage() {
 						<p className="text-text-secondary">
 							{t('onboarding.step', { current: currentStep, total: TOTAL_STEPS })}
 						</p>
-						{/* Barre de progression */}
 						<div className="flex gap-2 justify-center mt-4">
 							{Array.from({ length: TOTAL_STEPS }).map((_, i) => (
 								<div
@@ -238,7 +264,6 @@ export function OnboardingPage() {
 									{t('onboarding.step1Title')}
 								</h2>
 
-								{/* Genre */}
 								<div className="space-y-2">
 									<label className="block text-sm font-medium text-text-primary">
 										{t('onboarding.gender')}
@@ -273,7 +298,6 @@ export function OnboardingPage() {
 									</div>
 								</div>
 
-								{/* Préférence sexuelle */}
 								<div className="space-y-2">
 									<label className="block text-sm font-medium text-text-primary">
 										{t('onboarding.sexualPreference')}
@@ -303,7 +327,6 @@ export function OnboardingPage() {
 									</div>
 								</div>
 
-								{/* Date de naissance */}
 								<Input
 									id="birthDate"
 									label={t('onboarding.birthDate')}
@@ -381,16 +404,18 @@ export function OnboardingPage() {
 							</div>
 						)}
 
-						{/* Étape 4 : Photos (placeholder pour l'instant) */}
+						{/* Étape 4 : Photos */}
 						{currentStep === 4 && (
 							<div className="space-y-6">
 								<h2 className="text-xl font-semibold text-text-primary">
 									{t('onboarding.step4Title')}
 								</h2>
 								<p className="text-text-secondary">{t('onboarding.photosHelp')}</p>
-								<p className="text-text-muted text-center py-8">
-									Upload de photos à implémenter...
-								</p>
+								<PhotoUploader
+									photos={photos}
+									onPhotosChange={setPhotos}
+									maxPhotos={5}
+								/>
 							</div>
 						)}
 

@@ -4,7 +4,7 @@
   "description": "Matcha is a full-stack dating app featuring user profiles, interest-based matching, geolocation, real-time chat, and live notifications. Built with secure authentication and responsive design for an interactive user experience.",
   "main": "index.js",
 "scripts": {
-  "format": "prettier --write \"client/src/**/*.{ts,tsx,css}\" \"server/src/**/*.ts\"",
+"format": "prettier --write \"client/src/**/*.{ts,tsx,css,json}\" \"server/src/**/*.ts\"",
   "format:check": "prettier --check \"client/src/**/*.{ts,tsx,css}\" \"server/src/**/*.ts\""
 },
   "repository": {
