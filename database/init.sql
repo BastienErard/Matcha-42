@@ -34,6 +34,7 @@ CREATE TABLE users (
 	last_login DATETIME,
 	is_online BOOLEAN DEFAULT FALSE,
 	preferred_language ENUM('fr', 'en') DEFAULT 'fr',
+	has_completed_onboarding BOOLEAN DEFAULT FALSE,
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	INDEX idx_email (email),
@@ -48,7 +49,7 @@ CREATE TABLE users (
 -- ============================================
 CREATE TABLE profiles (
 	user_id INT PRIMARY KEY,
-	gender ENUM('male', 'female', 'other') NOT NULL,
+	gender ENUM('male', 'female') NOT NULL,
 	sexual_preference ENUM('male', 'female', 'both') NOT NULL DEFAULT 'both',
 	biography TEXT,
 	birth_date DATE NOT NULL,

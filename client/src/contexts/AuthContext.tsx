@@ -1,6 +1,6 @@
-import { createContext, useState, useEffect, type ReactNode } from 'react';
-import { apiRequest } from '../api/client';
-import * as authApi from '../api/auth';
+import { createContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { login as apiLogin, register as apiRegister, logout as apiLogout } from '../api';
+import { getMyProfile } from '../api/profile';
 
 interface User {
 	id: number;
@@ -8,24 +8,25 @@ interface User {
 	username: string;
 	firstName: string;
 	lastName: string;
-	isVerified: boolean;
-	isProfileComplete: boolean;
 }
 
 interface AuthContextType {
 	user: User | null;
 	isLoading: boolean;
+	hasCompletedOnboarding: boolean;
+	hasProfilePicture: boolean;
 	login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
 	register: (data: RegisterData) => Promise<{ success: boolean; error?: string }>;
 	logout: () => Promise<void>;
+	refreshProfile: () => Promise<void>;
 }
 
 interface RegisterData {
 	email: string;
 	username: string;
-	password: string;
 	firstName: string;
 	lastName: string;
+	password: string;
 	language: 'fr' | 'en';
 }
 
@@ -34,56 +35,82 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
 	const [user, setUser] = useState<User | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
+	const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+	const [hasProfilePicture, setHasProfilePicture] = useState(false);
 
-	// Au démarrage, vérifie si l'utilisateur est connecté via le cookie
-	useEffect(() => {
-		async function checkAuth() {
-			const response = await apiRequest<User>('/profile/me');
+	// Récupère le profil utilisateur
+	const refreshProfile = useCallback(async () => {
+		const result = await getMyProfile();
 
-			if (response.success && response.data) {
-				setUser(response.data);
-			}
+		if (result.success && result.data) {
+			const { profile, hasCompletedOnboarding, hasProfilePicture } = result.data;
 
-			setIsLoading(false);
+			setUser({
+				id: profile.id,
+				email: profile.email,
+				username: profile.username,
+				firstName: profile.first_name,
+				lastName: profile.last_name,
+			});
+			setHasCompletedOnboarding(hasCompletedOnboarding);
+			setHasProfilePicture(hasProfilePicture);
+		} else {
+			setUser(null);
+			setHasCompletedOnboarding(false);
+			setHasProfilePicture(false);
 		}
-
-		checkAuth();
 	}, []);
 
-	async function login(username: string, password: string) {
-		const response = await authApi.login({ username, password });
+	// Vérifie si l'utilisateur est connecté au chargement
+	useEffect(() => {
+		async function checkAuth() {
+			await refreshProfile();
+			setIsLoading(false);
+		}
+		checkAuth();
+	}, [refreshProfile]);
 
-		if (response.success && response.data) {
-			setUser(response.data.user);
+	const login = async (username: string, password: string) => {
+		const result = await apiLogin({ username, password });
+
+		if (result.success) {
+			await refreshProfile();
 			return { success: true };
 		}
 
-		return {
-			success: false,
-			error: response.error?.code || 'SERVER_ERROR',
-		};
-	}
+		return { success: false, error: result.error?.code };
+	};
 
-	async function register(data: RegisterData) {
-		const response = await authApi.register(data);
+	const register = async (data: RegisterData) => {
+		const result = await apiRegister(data);
 
-		if (response.success) {
+		if (result.success) {
 			return { success: true };
 		}
 
-		return {
-			success: false,
-			error: response.error?.code || 'SERVER_ERROR',
-		};
-	}
+		return { success: false, error: result.error?.code };
+	};
 
-	async function logout() {
-		await authApi.logout();
+	const logout = async () => {
+		await apiLogout();
 		setUser(null);
-	}
+		setHasCompletedOnboarding(false);
+		setHasProfilePicture(false);
+	};
 
 	return (
-		<AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
+		<AuthContext.Provider
+			value={{
+				user,
+				isLoading,
+				hasCompletedOnboarding,
+				hasProfilePicture,
+				login,
+				register,
+				logout,
+				refreshProfile,
+			}}
+		>
 			{children}
 		</AuthContext.Provider>
 	);

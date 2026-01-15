@@ -16,6 +16,7 @@ import { ResetPasswordPage } from '../pages/auth/ResetPasswordPage';
 
 // Pages protégées (authenticated only)
 import { DiscoverPage } from '../pages/browse/DiscoverPage';
+import { OnboardingPage } from '../pages/onboarding/OnboardingPage';
 
 export function AppRouter() {
 	return (
@@ -68,7 +69,17 @@ export function AppRouter() {
 				{/* Vérification email (accessible à tous) */}
 				<Route path="/verify/:token" element={<VerifyEmailPage />} />
 
-				{/* Routes protégées (connectés uniquement) */}
+				{/* Onboarding (connecté mais pas besoin d'avoir terminé l'onboarding) */}
+				<Route
+					path="/onboarding"
+					element={
+						<ProtectedRoute requiresOnboarding={false}>
+							<OnboardingPage />
+						</ProtectedRoute>
+					}
+				/>
+
+				{/* Routes protégées (connectés + onboarding terminé) */}
 				<Route
 					path="/discover"
 					element={

@@ -7,7 +7,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction):
 	const token = req.cookies?.token;
 
 	if (!token) {
-		res.status(401).json({ error: 'Non authentifié' });
+		res.status(401).json({ code: 'Non authentifié' });
 		return;
 	}
 
@@ -21,7 +21,7 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction):
 			secure: process.env.NODE_ENV === 'production',
 			sameSite: 'strict',
 		});
-		res.status(401).json({ error: 'Token invalide ou expiré' });
+		res.status(401).json({ code: 'Token invalide ou expiré' });
 		return;
 	}
 

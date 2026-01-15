@@ -15,7 +15,7 @@ export const getMyPhotos = async (req: Request, res: Response): Promise<void> =>
 		res.json({ photos });
 	} catch (error) {
 		console.error('Erreur getMyPhotos:', error);
-		res.status(500).json({ error: 'SERVER_ERROR' });
+		res.status(500).json({ code: 'SERVER_ERROR' });
 	}
 };
 
@@ -26,7 +26,7 @@ export const uploadPhoto = async (req: Request, res: Response): Promise<void> =>
 		const file = req.file;
 
 		if (!file) {
-			res.status(400).json({ error: 'NO_FILE_PROVIDED' });
+			res.status(400).json({ code: 'NO_FILE_PROVIDED' });
 			return;
 		}
 
@@ -34,14 +34,14 @@ export const uploadPhoto = async (req: Request, res: Response): Promise<void> =>
 		if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
 			// Supprime le fichier temporaire
 			await fs.unlink(file.path);
-			res.status(400).json({ error: 'INVALID_FILE_TYPE' });
+			res.status(400).json({ code: 'INVALID_FILE_TYPE' });
 			return;
 		}
 
 		// Validation de la taille
 		if (file.size > MAX_FILE_SIZE) {
 			await fs.unlink(file.path);
-			res.status(400).json({ error: 'FILE_TOO_LARGE' });
+			res.status(400).json({ code: 'FILE_TOO_LARGE' });
 			return;
 		}
 
@@ -65,10 +65,10 @@ export const uploadPhoto = async (req: Request, res: Response): Promise<void> =>
 	} catch (error) {
 		console.error('Erreur uploadPhoto:', error);
 		if (error instanceof Error && error.message === 'MAX_PHOTOS_REACHED') {
-			res.status(400).json({ error: 'MAX_PHOTOS_REACHED' });
+			res.status(400).json({ code: 'MAX_PHOTOS_REACHED' });
 			return;
 		}
-		res.status(500).json({ error: 'SERVER_ERROR' });
+		res.status(500).json({ code: 'SERVER_ERROR' });
 	}
 };
 
@@ -79,21 +79,21 @@ export const deletePhoto = async (req: Request, res: Response): Promise<void> =>
 		const photoId = parseInt(req.params.id, 10);
 
 		if (isNaN(photoId)) {
-			res.status(400).json({ error: 'INVALID_PHOTO_ID' });
+			res.status(400).json({ code: 'INVALID_PHOTO_ID' });
 			return;
 		}
 
 		const deleted = await photoService.deletePhoto(userId, photoId);
 
 		if (!deleted) {
-			res.status(404).json({ error: 'PHOTO_NOT_FOUND' });
+			res.status(404).json({ code: 'PHOTO_NOT_FOUND' });
 			return;
 		}
 
 		res.json({ message: 'PHOTO_DELETED' });
 	} catch (error) {
 		console.error('Erreur deletePhoto:', error);
-		res.status(500).json({ error: 'SERVER_ERROR' });
+		res.status(500).json({ code: 'SERVER_ERROR' });
 	}
 };
 
@@ -104,21 +104,21 @@ export const setProfilePicture = async (req: Request, res: Response): Promise<vo
 		const photoId = parseInt(req.params.id, 10);
 
 		if (isNaN(photoId)) {
-			res.status(400).json({ error: 'INVALID_PHOTO_ID' });
+			res.status(400).json({ code: 'INVALID_PHOTO_ID' });
 			return;
 		}
 
 		const success = await photoService.setProfilePicture(userId, photoId);
 
 		if (!success) {
-			res.status(404).json({ error: 'PHOTO_NOT_FOUND' });
+			res.status(404).json({ code: 'PHOTO_NOT_FOUND' });
 			return;
 		}
 
 		res.json({ message: 'PROFILE_PICTURE_UPDATED' });
 	} catch (error) {
 		console.error('Erreur setProfilePicture:', error);
-		res.status(500).json({ error: 'SERVER_ERROR' });
+		res.status(500).json({ code: 'SERVER_ERROR' });
 	}
 };
 
@@ -129,20 +129,20 @@ export const reorderPhotos = async (req: Request, res: Response): Promise<void> 
 		const { photoIds } = req.body;
 
 		if (!photoIds || !Array.isArray(photoIds)) {
-			res.status(400).json({ error: 'INVALID_PHOTO_IDS' });
+			res.status(400).json({ code: 'INVALID_PHOTO_IDS' });
 			return;
 		}
 
 		const success = await photoService.reorderPhotos(userId, photoIds);
 
 		if (!success) {
-			res.status(400).json({ error: 'REORDER_FAILED' });
+			res.status(400).json({ code: 'REORDER_FAILED' });
 			return;
 		}
 
 		res.json({ message: 'PHOTOS_REORDERED' });
 	} catch (error) {
 		console.error('Erreur reorderPhotos:', error);
-		res.status(500).json({ error: 'SERVER_ERROR' });
+		res.status(500).json({ code: 'SERVER_ERROR' });
 	}
 };

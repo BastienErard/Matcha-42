@@ -78,45 +78,67 @@ export const profileExists = async (userId: number): Promise<boolean> => {
 };
 
 // Crée ou met à jour le profil
-export const upsertProfile = async (userId: number, data: ProfileData): Promise<void> => {
+export const upsertProfile = async (userId: number, data: Partial<ProfileData>): Promise<void> => {
 	const exists = await profileExists(userId);
 
 	if (exists) {
-		await pool.query(
-			`UPDATE profiles SET
-				gender = ?, sexual_preference = ?, biography = ?, birth_date = ?,
-				latitude = ?, longitude = ?, city = ?, country = ?,
-				location_updated_at = IF(? IS NOT NULL, NOW(), location_updated_at)
-			WHERE user_id = ?`,
-			[
-				data.gender,
-				data.sexualPreference,
-				data.biography,
-				data.birthDate,
-				data.latitude || null,
-				data.longitude || null,
-				data.city || null,
-				data.country || null,
-				data.latitude,
-				userId,
-			]
-		);
+		// Construit la requête dynamiquement avec seulement les champs fournis
+		const fields: string[] = [];
+		const values: any[] = [];
+
+		if (data.gender !== undefined) {
+			fields.push('gender = ?');
+			values.push(data.gender);
+		}
+		if (data.sexualPreference !== undefined) {
+			fields.push('sexual_preference = ?');
+			values.push(data.sexualPreference);
+		}
+		if (data.biography !== undefined) {
+			fields.push('biography = ?');
+			values.push(data.biography);
+		}
+		if (data.birthDate !== undefined) {
+			fields.push('birth_date = ?');
+			values.push(data.birthDate);
+		}
+		if (data.latitude !== undefined) {
+			fields.push('latitude = ?');
+			values.push(data.latitude);
+		}
+		if (data.longitude !== undefined) {
+			fields.push('longitude = ?');
+			values.push(data.longitude);
+		}
+		if (data.city !== undefined) {
+			fields.push('city = ?');
+			values.push(data.city);
+		}
+		if (data.country !== undefined) {
+			fields.push('country = ?');
+			values.push(data.country);
+		}
+
+		if (fields.length > 0) {
+			values.push(userId);
+			await pool.query(`UPDATE profiles SET ${fields.join(', ')} WHERE user_id = ?`, values);
+		}
 	} else {
+		// Création : on insère avec les valeurs fournies (les autres seront NULL)
 		await pool.query(
 			`INSERT INTO profiles
-				(user_id, gender, sexual_preference, biography, birth_date, latitude, longitude, city, country, location_updated_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, IF(? IS NOT NULL, NOW(), NULL))`,
+				(user_id, gender, sexual_preference, biography, birth_date, latitude, longitude, city, country)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 			[
 				userId,
-				data.gender,
-				data.sexualPreference,
-				data.biography,
-				data.birthDate,
+				data.gender || null,
+				data.sexualPreference || null,
+				data.biography || null,
+				data.birthDate || null,
 				data.latitude || null,
 				data.longitude || null,
 				data.city || null,
 				data.country || null,
-				data.latitude,
 			]
 		);
 	}
@@ -218,4 +240,27 @@ export const getProfileLikers = async (userId: number): Promise<RowDataPacket[]>
 		[userId]
 	);
 	return rows;
+};
+
+// Vérifie si l'utilisateur a une photo de profil
+export const hasProfilePicture = async (userId: number): Promise<boolean> => {
+	const [rows] = await pool.query<RowDataPacket[]>(
+		'SELECT id FROM photos WHERE user_id = ? AND is_profile_picture = TRUE LIMIT 1',
+		[userId]
+	);
+	return rows.length > 0;
+};
+
+// Marque l'onboarding comme terminé
+export const completeOnboarding = async (userId: number): Promise<void> => {
+	await pool.query('UPDATE users SET has_completed_onboarding = TRUE WHERE id = ?', [userId]);
+};
+
+// Vérifie si l'utilisateur a complété l'onboarding
+export const getOnboardingStatus = async (userId: number): Promise<boolean> => {
+	const [rows] = await pool.query<RowDataPacket[]>(
+		'SELECT has_completed_onboarding FROM users WHERE id = ?',
+		[userId]
+	);
+	return rows.length > 0 ? rows[0].has_completed_onboarding : false;
 };

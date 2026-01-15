@@ -11,6 +11,9 @@ router.use(authMiddleware);
 router.get('/me', profileController.getMyProfile);
 router.put('/me', profileController.updateMyProfile);
 
+// Complétion de l'onboarding
+router.post('/complete-onboarding', profileController.completeOnboarding);
+
 // Mise à jour des infos utilisateur (nom, prénom, email)
 router.put('/user', profileController.updateUserInfo);
 

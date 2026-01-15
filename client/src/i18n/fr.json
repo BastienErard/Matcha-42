@@ -52,6 +52,33 @@
 "resetPasswordLoading": "Réinitialisation...",
 "resetPasswordSuccess": "Mot de passe réinitialisé avec succès !"
   },
+  "onboarding": {
+  "title": "Complétez votre profil",
+  "step": "Étape {{current}} sur {{total}}",
+  "step1Title": "Qui êtes-vous ?",
+  "step2Title": "Parlez-nous de vous",
+  "step3Title": "Vos centres d'intérêt",
+  "step4Title": "Vos photos",
+  "gender": "Genre",
+  "genderMale": "Homme",
+  "genderFemale": "Femme",
+  "sexualPreference": "Préférence",
+  "prefMale": "Hommes",
+  "prefFemale": "Femmes",
+  "prefBoth": "Les deux",
+  "birthDate": "Date de naissance",
+  "biography": "Biographie",
+  "biographyPlaceholder": "Décrivez-vous en quelques mots...",
+  "tags": "Tags",
+  "tagsPlaceholder": "Ajoutez des tags (ex: #voyage, #musique)",
+  "tagsHelp": "Appuyez sur Entrée pour ajouter un tag",
+  "photos": "Photos",
+  "photosHelp": "Ajoutez jusqu'à 5 photos. La première sera votre photo de profil.",
+  "addPhoto": "Ajouter une photo",
+  "continue": "Continuer",
+  "finish": "Terminer",
+  "skipForNow": "Passer pour l'instant"
+},
   "landing": {
     "tagline": "Trouvez l'amour, pas les compromis.",
     "cta": "Commencer",
@@ -90,7 +117,8 @@
 "INVALID_OR_EXPIRED_TOKEN": "Lien invalide ou expiré.",
 "PASSWORDS_DO_NOT_MATCH": "Les mots de passe ne correspondent pas.",
 "INVALID_USERNAME_FORMAT": "Le pseudo doit contenir entre 3 et 20 caractères (lettres, chiffres, underscore).",
-"SAME_PASSWORD": "Le nouveau mot de passe doit être différent de l'ancien."
+"SAME_PASSWORD": "Le nouveau mot de passe doit être différent de l'ancien.",
+"MUST_BE_ADULT": "Vous devez avoir au moins 18 ans."
 
 
   },

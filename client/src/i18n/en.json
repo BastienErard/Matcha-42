@@ -52,6 +52,33 @@
 "resetPasswordLoading": "Resetting...",
 "resetPasswordSuccess": "Password reset successfully!"
   },
+  "onboarding": {
+  "title": "Complete your profile",
+  "step": "Step {{current}} of {{total}}",
+  "step1Title": "Who are you?",
+  "step2Title": "Tell us about yourself",
+  "step3Title": "Your interests",
+  "step4Title": "Your photos",
+  "gender": "Gender",
+  "genderMale": "Man",
+  "genderFemale": "Woman",
+  "sexualPreference": "Preference",
+  "prefMale": "Men",
+  "prefFemale": "Women",
+  "prefBoth": "Both",
+  "birthDate": "Date of birth",
+  "biography": "Biography",
+  "biographyPlaceholder": "Describe yourself in a few words...",
+  "tags": "Tags",
+  "tagsPlaceholder": "Add tags (e.g. #travel, #music)",
+  "tagsHelp": "Press Enter to add a tag",
+  "photos": "Photos",
+  "photosHelp": "Add up to 5 photos. The first one will be your profile picture.",
+  "addPhoto": "Add a photo",
+  "continue": "Continue",
+  "finish": "Finish",
+  "skipForNow": "Skip for now"
+},
   "landing": {
     "tagline": "Find love, not compromises.",
     "cta": "Get started",
@@ -90,7 +117,8 @@
 "INVALID_OR_EXPIRED_TOKEN": "Invalid or expired link.",
 "PASSWORDS_DO_NOT_MATCH": "Passwords do not match.",
 "INVALID_USERNAME_FORMAT": "Username must be 3-20 characters (letters, numbers, underscore only).",
-"SAME_PASSWORD": "New password must be different from the old one."
+"SAME_PASSWORD": "New password must be different from the old one.",
+"MUST_BE_ADULT": "You must be at least 18 years old."
 
   },
   "notFound": {

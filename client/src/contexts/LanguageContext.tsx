@@ -12,7 +12,7 @@ type Translations = typeof fr;
 interface LanguageContextType {
 	language: Language;
 	setLanguage: (lang: Language) => void;
-	t: (key: string) => string;
+	t: (key: string, params?: Record<string, string | number>) => string;
 }
 
 // Les traductions indexées par langue
@@ -40,7 +40,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
 	// Fonction de traduction
 	const t = useCallback(
-		(key: string): string => {
+		(key: string, params?: Record<string, string | number>): string => {
 			const keys = key.split('.');
 			let value: unknown = translations[language];
 
@@ -53,7 +53,16 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 				}
 			}
 
-			return typeof value === 'string' ? value : key;
+			if (typeof value !== 'string') return key;
+
+			// Remplace les {{variable}} par leurs valeurs
+			if (params) {
+				return value.replace(/\{\{(\w+)\}\}/g, (_, paramKey) => {
+					return params[paramKey]?.toString() || '';
+				});
+			}
+
+			return value;
 		},
 		[language]
 	);
