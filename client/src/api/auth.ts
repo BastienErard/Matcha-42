@@ -74,3 +74,11 @@ export async function resetPassword(token: string, password: string) {
 		body: JSON.stringify({ token, password }),
 	});
 }
+
+// Changer le mot de passe
+export async function changePassword(currentPassword: string, newPassword: string) {
+	return apiRequest<{ message: string }>('/auth/change-password', {
+		method: 'PUT',
+		body: JSON.stringify({ currentPassword, newPassword }),
+	});
+}

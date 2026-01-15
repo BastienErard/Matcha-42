@@ -13,5 +13,6 @@ router.post('/reset-password', authController.resetPassword);
 
 // Routes protégées (nécessitent un token JWT valide)
 router.post('/logout', authMiddleware, authController.logout);
+router.put('/change-password', authMiddleware, authController.changePassword);
 
 export default router;

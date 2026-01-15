@@ -164,3 +164,37 @@ export const resetPassword = async (token: string, newPassword: string): Promise
 
 	return true;
 };
+
+// Change le mot de passe d'un utilisateur connecté
+export const changePassword = async (
+	userId: number,
+	currentPassword: string,
+	newPassword: string
+): Promise<{ success: boolean; code?: string }> => {
+	// Récupère le hash actuel
+	const [rows] = await pool.query<User[]>('SELECT password_hash FROM users WHERE id = ?', [
+		userId,
+	]);
+
+	if (rows.length === 0) {
+		return { success: false, code: 'USER_NOT_FOUND' };
+	}
+
+	// Vérifie l'ancien mot de passe
+	const isValid = await comparePassword(currentPassword, rows[0].password_hash);
+	if (!isValid) {
+		return { success: false, code: 'INVALID_CURRENT_PASSWORD' };
+	}
+
+	// Vérifie que le nouveau mot de passe est différent de l'ancien
+	const isSame = await comparePassword(newPassword, rows[0].password_hash);
+	if (isSame) {
+		return { success: false, code: 'PASSWORD_MUST_BE_DIFFERENT' };
+	}
+
+	// Hash et enregistre le nouveau mot de passe
+	const hashedPassword = await hashPassword(newPassword);
+	await pool.query('UPDATE users SET password_hash = ? WHERE id = ?', [hashedPassword, userId]);
+
+	return { success: true };
+};

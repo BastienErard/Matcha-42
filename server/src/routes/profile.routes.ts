@@ -21,4 +21,7 @@ router.put('/user', profileController.updateUserInfo);
 router.get('/visitors', profileController.getVisitors);
 router.get('/likers', profileController.getLikers);
 
+// Profils que j'ai likés
+router.get('/liked', profileController.getLikedProfiles);
+
 export default router;

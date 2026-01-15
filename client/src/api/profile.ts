@@ -41,6 +41,17 @@ export interface UpdateProfileData {
 	tags?: string[];
 }
 
+// Type pour les aperçus de profil (visitors, likers, liked)
+export interface ProfilePreview {
+	id: number;
+	username: string;
+	first_name: string;
+	last_name: string;
+	gender: string | null;
+	fame_rating: number;
+	created_at: string;
+}
+
 // Récupérer son profil
 export async function getMyProfile() {
 	return apiRequest<ProfileWithTags>('/profile/me');
@@ -63,5 +74,32 @@ export async function getTags() {
 export async function completeOnboarding() {
 	return apiRequest<{ message: string }>('/profile/complete-onboarding', {
 		method: 'POST',
+	});
+}
+
+// Récupérer les profils que j'ai likés
+export async function getLikedProfiles() {
+	return apiRequest<{ liked: ProfilePreview[] }>('/profile/liked');
+}
+
+// Récupérer qui a visité mon profil
+export async function getVisitors() {
+	return apiRequest<{ visitors: ProfilePreview[] }>('/profile/visitors');
+}
+
+// Récupérer qui m'a liké
+export async function getLikers() {
+	return apiRequest<{ likers: ProfilePreview[] }>('/profile/likers');
+}
+
+// Mettre à jour les infos utilisateur (nom, prénom, email)
+export async function updateUserInfo(data: {
+	firstName?: string;
+	lastName?: string;
+	email?: string;
+}) {
+	return apiRequest<{ message: string }>('/profile/user', {
+		method: 'PUT',
+		body: JSON.stringify(data),
 	});
 }

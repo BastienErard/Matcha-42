@@ -17,6 +17,7 @@ import { ResetPasswordPage } from '../pages/auth/ResetPasswordPage';
 // Pages protégées (authenticated only)
 import { DiscoverPage } from '../pages/browse/DiscoverPage';
 import { OnboardingPage } from '../pages/onboarding/OnboardingPage';
+import { ProfilePage } from '../pages/profile/ProfilePage';
 
 export function AppRouter() {
 	return (
@@ -85,6 +86,14 @@ export function AppRouter() {
 					element={
 						<ProtectedRoute>
 							<DiscoverPage />
+						</ProtectedRoute>
+					}
+				/>
+				<Route
+					path="/profile"
+					element={
+						<ProtectedRoute>
+							<ProfilePage />
 						</ProtectedRoute>
 					}
 				/>

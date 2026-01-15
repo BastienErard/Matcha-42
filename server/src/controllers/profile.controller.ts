@@ -190,3 +190,15 @@ export const getLikers = async (req: Request, res: Response): Promise<void> => {
 		res.status(500).json({ code: 'SERVER_ERROR' });
 	}
 };
+
+// GET /api/profile/liked
+export const getLikedProfiles = async (req: Request, res: Response): Promise<void> => {
+	try {
+		const userId = req.user!.userId;
+		const liked = await profileService.getLikedProfiles(userId);
+		res.json({ liked });
+	} catch (error) {
+		console.error('Erreur getLikedProfiles:', error);
+		res.status(500).json({ code: 'SERVER_ERROR' });
+	}
+};

@@ -173,3 +173,35 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
 		res.status(500).json({ code: 'SERVER_ERROR' });
 	}
 };
+
+// PUT /api/auth/change-password
+export const changePassword = async (req: Request, res: Response): Promise<void> => {
+	const userId = req.user!.userId;
+	const { currentPassword, newPassword } = req.body;
+
+	if (!currentPassword || !newPassword) {
+		res.status(400).json({ code: 'MISSING_REQUIRED_FIELDS' });
+		return;
+	}
+
+	// Validation du nouveau mot de passe
+	const passwordValidation = validatePassword(newPassword);
+	if (!passwordValidation.isValid) {
+		res.status(400).json({ code: passwordValidation.error });
+		return;
+	}
+
+	try {
+		const result = await authService.changePassword(userId, currentPassword, newPassword);
+
+		if (!result.success) {
+			res.status(400).json({ code: result.code });
+			return;
+		}
+
+		res.json({ message: 'PASSWORD_CHANGED' });
+	} catch (error) {
+		console.error('Erreur changePassword:', error);
+		res.status(500).json({ code: 'SERVER_ERROR' });
+	}
+};

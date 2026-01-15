@@ -4,6 +4,8 @@ import { Layout } from '../../components/layout';
 import { Button, Input, PhotoUploader } from '../../components/ui';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useAuth } from '../../hooks/useAuth';
+import { translateTag } from '../../utils/tags';
+
 import {
 	updateProfile,
 	getTags,
@@ -388,7 +390,7 @@ export function OnboardingPage() {
 															: 'border-border text-text-secondary hover:border-primary/50'
 													}`}
 												>
-													#{tag.name}
+													#{translateTag(tag.name, t)}
 												</button>
 											))}
 										</div>

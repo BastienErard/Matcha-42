@@ -264,3 +264,19 @@ export const getOnboardingStatus = async (userId: number): Promise<boolean> => {
 	);
 	return rows.length > 0 ? rows[0].has_completed_onboarding : false;
 };
+
+// Récupère les profils que l'utilisateur a likés
+export const getLikedProfiles = async (userId: number): Promise<RowDataPacket[]> => {
+	const [rows] = await pool.query<RowDataPacket[]>(
+		`SELECT u.id, u.username, u.first_name, u.last_name,
+			p.gender, p.fame_rating, l.created_at
+		FROM likes l
+		JOIN users u ON l.to_user_id = u.id
+		LEFT JOIN profiles p ON u.id = p.user_id
+		WHERE l.from_user_id = ?
+		ORDER BY l.created_at DESC
+		LIMIT 50`,
+		[userId]
+	);
+	return rows;
+};
