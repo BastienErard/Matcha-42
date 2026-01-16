@@ -7,6 +7,7 @@ import profileRoutes from './routes/profile.routes';
 import photoRoutes from './routes/photo.routes';
 import cookieParser from 'cookie-parser';
 import tagRoutes from './routes/tag.routes';
+import locationRoutes from './routes/location.routes';
 
 // Charge les variables d'environnement depuis .env
 dotenv.config();
@@ -33,6 +34,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/photos', photoRoutes);
 app.use('/api/tags', tagRoutes);
+app.use('/api/profile', locationRoutes);
 
 // Route de test + test l'accès à MySQL
 app.get('/api/health', async (_req: Request, res: Response) => {
