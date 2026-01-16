@@ -1,18 +1,24 @@
 import { Request, Response } from 'express';
 import * as authService from '../services/auth.service';
 import { validatePassword } from '../utils/password-validator';
+import { sanitizeInput } from '../utils/sanitize';
 
 // POST /api/auth/register
 export const register = async (req: Request, res: Response): Promise<void> => {
 	const { email, username, password, firstName, lastName, language } = req.body;
 
-	if (!email || !username || !password || !firstName || !lastName) {
+	const cleanEmail = sanitizeInput(email);
+	const cleanUsername = sanitizeInput(username);
+	const cleanFirstName = sanitizeInput(firstName);
+	const cleanLastName = sanitizeInput(lastName);
+
+	if (!cleanEmail || !cleanUsername || !password || !cleanFirstName || !cleanLastName) {
 		res.status(400).json({ code: 'MISSING_REQUIRED_FIELDS' });
 		return;
 	}
 
 	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-	if (!emailRegex.test(email)) {
+	if (!emailRegex.test(cleanEmail)) {
 		res.status(400).json({ code: 'INVALID_EMAIL_FORMAT' });
 		return;
 	}
@@ -24,21 +30,21 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 	}
 
 	try {
-		if (await authService.emailExists(email)) {
+		if (await authService.emailExists(cleanEmail)) {
 			res.status(409).json({ code: 'EMAIL_ALREADY_EXISTS' });
 			return;
 		}
-		if (await authService.usernameExists(username)) {
+		if (await authService.usernameExists(cleanUsername)) {
 			res.status(409).json({ code: 'USERNAME_ALREADY_EXISTS' });
 			return;
 		}
 
 		const { userId } = await authService.createUser({
-			email,
-			username,
+			email: cleanEmail,
+			username: cleanUsername,
 			password,
-			firstName,
-			lastName,
+			firstName: cleanFirstName,
+			lastName: cleanLastName,
 			language,
 		});
 
@@ -56,13 +62,15 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 export const login = async (req: Request, res: Response): Promise<void> => {
 	const { username, password } = req.body;
 
-	if (!username || !password) {
+	const cleanUsername = sanitizeInput(username);
+
+	if (!cleanUsername || !password) {
 		res.status(400).json({ code: 'MISSING_REQUIRED_FIELDS' });
 		return;
 	}
 
 	try {
-		const result = await authService.login({ username, password });
+		const result = await authService.login({ username: cleanUsername, password });
 
 		if (!result) {
 			res.status(401).json({ code: 'INVALID_CREDENTIALS' });
@@ -129,13 +137,15 @@ export const verifyEmail = async (req: Request, res: Response): Promise<void> =>
 export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
 	const { email } = req.body;
 
-	if (!email) {
+	const cleanEmail = sanitizeInput(email);
+
+	if (!cleanEmail) {
 		res.status(400).json({ code: 'MISSING_REQUIRED_FIELDS' });
 		return;
 	}
 
 	try {
-		await authService.forgotPassword(email);
+		await authService.forgotPassword(cleanEmail);
 
 		res.json({ message: 'Password reset email sent if account exists' });
 	} catch (error) {
@@ -184,7 +194,6 @@ export const changePassword = async (req: Request, res: Response): Promise<void>
 		return;
 	}
 
-	// Validation du nouveau mot de passe
 	const passwordValidation = validatePassword(newPassword);
 	if (!passwordValidation.isValid) {
 		res.status(400).json({ code: passwordValidation.error });

@@ -58,7 +58,7 @@ CREATE TABLE profiles (
 	city VARCHAR(100),
 	country VARCHAR(100),
 	location_updated_at TIMESTAMP NULL,
-	fame_rating INT DEFAULT 0,
+	fame_rating INT DEFAULT 50,
 	profile_picture_id INT,
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

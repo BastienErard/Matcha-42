@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import * as profileService from '../services/profile.service';
 import * as authService from '../services/auth.service';
+import { sanitizeInput, sanitizeArray } from '../utils/sanitize';
 
 // GET /api/profile/me
 export const getMyProfile = async (req: Request, res: Response): Promise<void> => {
@@ -85,6 +86,12 @@ export const updateMyProfile = async (req: Request, res: Response): Promise<void
 		tags,
 	} = req.body;
 
+	// Sanitization des inputs
+	const cleanBiography = biography ? sanitizeInput(biography) : undefined;
+	const cleanCity = city ? sanitizeInput(city) : undefined;
+	const cleanCountry = country ? sanitizeInput(country) : undefined;
+	const cleanTags = tags ? sanitizeArray(tags) : undefined;
+
 	// Validation du genre si fourni
 	if (gender && !['male', 'female'].includes(gender)) {
 		res.status(400).json({ code: 'INVALID_GENDER' });
@@ -101,9 +108,15 @@ export const updateMyProfile = async (req: Request, res: Response): Promise<void
 	if (birthDate) {
 		const birthDateObj = new Date(birthDate);
 		const today = new Date();
-		const age = today.getFullYear() - birthDateObj.getFullYear();
+		let age = today.getFullYear() - birthDateObj.getFullYear();
 		const monthDiff = today.getMonth() - birthDateObj.getMonth();
-		if (age < 18 || (age === 18 && monthDiff < 0)) {
+		const dayDiff = today.getDate() - birthDateObj.getDate();
+
+		if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+			age--;
+		}
+
+		if (age < 18) {
 			res.status(400).json({ code: 'MUST_BE_ADULT' });
 			return;
 		}
@@ -114,12 +127,12 @@ export const updateMyProfile = async (req: Request, res: Response): Promise<void
 		const profileData: any = {};
 		if (gender) profileData.gender = gender;
 		if (sexualPreference) profileData.sexualPreference = sexualPreference;
-		if (biography !== undefined) profileData.biography = biography;
+		if (cleanBiography !== undefined) profileData.biography = cleanBiography;
 		if (birthDate) profileData.birthDate = birthDate;
 		if (latitude !== undefined) profileData.latitude = latitude;
 		if (longitude !== undefined) profileData.longitude = longitude;
-		if (city !== undefined) profileData.city = city;
-		if (country !== undefined) profileData.country = country;
+		if (cleanCity !== undefined) profileData.city = cleanCity;
+		if (cleanCountry !== undefined) profileData.country = cleanCountry;
 
 		// Met à jour le profil seulement si des données sont fournies
 		if (Object.keys(profileData).length > 0) {
@@ -127,8 +140,8 @@ export const updateMyProfile = async (req: Request, res: Response): Promise<void
 		}
 
 		// Met à jour les tags si fournis
-		if (tags && Array.isArray(tags)) {
-			await profileService.updateUserTags(userId, tags);
+		if (cleanTags && Array.isArray(cleanTags)) {
+			await profileService.updateUserTags(userId, cleanTags);
 		}
 
 		res.json({ message: 'PROFILE_UPDATED' });
@@ -143,23 +156,32 @@ export const updateUserInfo = async (req: Request, res: Response): Promise<void>
 	const userId = req.user!.userId;
 	const { firstName, lastName, email } = req.body;
 
+	// Sanitization des inputs
+	const cleanFirstName = firstName ? sanitizeInput(firstName) : undefined;
+	const cleanLastName = lastName ? sanitizeInput(lastName) : undefined;
+	const cleanEmail = email ? sanitizeInput(email) : undefined;
+
 	// Validation format email si fourni
-	if (email) {
+	if (cleanEmail) {
 		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-		if (!emailRegex.test(email)) {
+		if (!emailRegex.test(cleanEmail)) {
 			res.status(400).json({ code: 'INVALID_EMAIL_FORMAT' });
 			return;
 		}
 
 		// Vérifie que l'email n'est pas déjà pris
-		if (await authService.emailExists(email)) {
+		if (await authService.emailExists(cleanEmail)) {
 			res.status(409).json({ code: 'EMAIL_ALREADY_EXISTS' });
 			return;
 		}
 	}
 
 	try {
-		await profileService.updateUser(userId, { firstName, lastName, email });
+		await profileService.updateUser(userId, {
+			firstName: cleanFirstName,
+			lastName: cleanLastName,
+			email: cleanEmail,
+		});
 		res.json({ message: 'USER_UPDATED' });
 	} catch (error) {
 		console.error('Erreur updateUserInfo:', error);
