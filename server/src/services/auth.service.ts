@@ -57,7 +57,7 @@ export const createUser = async (data: RegisterData): Promise<{ userId: number }
 
 	const [result] = await pool.query<ResultSetHeader>(
 		`INSERT INTO users (email, username, password_hash, first_name, last_name, verification_token, preferred_language)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		 VALUES (?, ?, ?, ?, ?, ?, ?)`,
 		[
 			data.email,
 			data.username,
@@ -69,10 +69,13 @@ export const createUser = async (data: RegisterData): Promise<{ userId: number }
 		]
 	);
 
-	// Envoie l'email de vérification
+	const userId = result.insertId;
+
+	await pool.query(`INSERT INTO profiles (user_id) VALUES (?)`, [userId]);
+
 	await sendVerificationEmail(data.email, verificationToken, lang);
 
-	return { userId: result.insertId };
+	return { userId };
 };
 
 // Vérifie le compte via le token reçu par email

@@ -9,5 +9,6 @@ router.use(authMiddleware);
 
 router.put('/location', locationController.updateLocation);
 router.get('/location-from-ip', locationController.getLocationFromIp);
+router.get('/location-source', locationController.getLocationSource);
 
 export default router;

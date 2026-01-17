@@ -1,10 +1,13 @@
 import pool from '../config/database';
 
+export type LocationSource = 'gps' | 'ip' | 'manual';
+
 interface LocationData {
 	latitude: number;
 	longitude: number;
 	city?: string;
 	country?: string;
+	source: LocationSource;
 }
 
 interface IpLocationResponse {
@@ -19,17 +22,42 @@ interface IpLocationResponse {
 export const updateLocation = async (userId: number, data: LocationData): Promise<void> => {
 	await pool.query(
 		`UPDATE profiles
-		 SET latitude = ?, longitude = ?, city = ?, country = ?, location_updated_at = NOW()
+		 SET latitude = ?, longitude = ?, city = ?, country = ?, location_source = ?, location_updated_at = NOW()
 		 WHERE user_id = ?`,
-		[data.latitude, data.longitude, data.city || null, data.country || null, userId]
+		[
+			data.latitude,
+			data.longitude,
+			data.city || null,
+			data.country || null,
+			data.source,
+			userId,
+		]
 	);
 };
 
+// Récupère la source de localisation actuelle d'un utilisateur
+export const getLocationSource = async (userId: number): Promise<LocationSource | null> => {
+	const [rows] = await pool.query<any[]>(
+		'SELECT location_source FROM profiles WHERE user_id = ?',
+		[userId]
+	);
+
+	if (rows.length === 0) {
+		return null;
+	}
+
+	return rows[0].location_source;
+};
+
 // Récupère la localisation à partir de l'IP via ip-api.com
-export const getLocationFromIp = async (ip: string): Promise<LocationData | null> => {
+export const getLocationFromIp = async (
+	ip: string
+): Promise<Omit<LocationData, 'source'> | null> => {
 	try {
-		const response = await fetch(`http://ip-api.com/json/${ip}?fields=status,lat,lon,city,country`);
-const data = (await response.json()) as IpLocationResponse;
+		const response = await fetch(
+			`http://ip-api.com/json/${ip}?fields=status,lat,lon,city,country`
+		);
+		const data = (await response.json()) as IpLocationResponse;
 
 		if (data.status !== 'success' || !data.lat || !data.lon) {
 			return null;

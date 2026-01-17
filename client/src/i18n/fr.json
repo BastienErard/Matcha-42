@@ -131,6 +131,26 @@
 		"viewProfile": "Voir le profil",
 		"birthDate": "Date de naissance"
 	},
+	"location": {
+		"title": "Localisation",
+		"description": "Nous utilisons votre position pour vous suggérer des profils à proximité.",
+		"requesting": "Recherche de votre position...",
+		"allow": "Autoriser la géolocalisation",
+		"denied": "Géolocalisation refusée, position estimée par IP.",
+		"manualEdit": "Modifier",
+		"city": "Ville",
+		"country": "Pays",
+		"cityPlaceholder": "Paris, Lyon, Marseille...",
+		"countryPlaceholder": "France, Suisse, Belgique...",
+		"detected": "Position détectée",
+		"approximate": "Position approximative",
+		"notSet": "Position non définie",
+		"sourceAuto": "Position automatique",
+		"sourceManual": "Position définie manuellement",
+		"resetToAuto": "Réactiver la détection automatique",
+		"updated": "Position mise à jour avec succès.",
+		"autoEnabled": "Détection automatique réactivée."
+	},
 	"landing": {
 		"tagline": "Trouvez l'amour, pas les compromis.",
 		"cta": "Commencer",
@@ -178,7 +198,12 @@
 		"PROFILE_PICTURE_REQUIRED": "Une photo de profil est requise pour terminer.",
 		"INVALID_CURRENT_PASSWORD": "Le mot de passe actuel est incorrect.",
 		"PASSWORD_MUST_BE_DIFFERENT": "Le nouveau mot de passe doit être différent de l'ancien.",
-		"PASSWORDS_DONT_MATCH": "Les mots de passe ne correspondent pas."
+		"PASSWORDS_DONT_MATCH": "Les mots de passe ne correspondent pas.",
+		"INVALID_COORDINATES": "Coordonnées invalides.",
+		"COORDINATES_OUT_OF_RANGE": "Coordonnées hors limites.",
+		"LOCATION_ERROR": "Impossible de déterminer votre position.",
+		"LOCATION_NOT_FOUND": "Lieu introuvable. Vérifiez l'orthographe ou essayez une ville plus grande.",
+		"CITY_AND_COUNTRY_REQUIRED": "La ville et le pays sont requis."
 	},
 	"tags": {
 		"vegan": "Végane",

@@ -21,13 +21,18 @@ const generateBirthDate = (): string => {
 };
 
 // Génère des coordonnées aléatoires dans le canton de Vaud
-const generateLocation = (): { latitude: number; longitude: number; city: string; country: string } => {
+const generateLocation = (): {
+	latitude: number;
+	longitude: number;
+	city: string;
+	country: string;
+} => {
 	const cities = [
 		{ city: 'Lausanne', lat: 46.5197, lng: 6.6323 },
 		{ city: 'Nyon', lat: 46.3833, lng: 6.2348 },
 		{ city: 'Vevey', lat: 46.4628, lng: 6.8431 },
 		{ city: 'Montreux', lat: 46.4312, lng: 6.9107 },
-		{ city: 'Yverdon-les-Bains', lat: 46.7785, lng: 6.6410 },
+		{ city: 'Yverdon-les-Bains', lat: 46.7785, lng: 6.641 },
 	];
 
 	const location = faker.helpers.arrayElement(cities);
@@ -59,7 +64,9 @@ const seed = async (): Promise<void> => {
 		);
 
 		if (existingUsers[0].count >= NB_USERS) {
-			console.log(`✅ La base contient déjà ${existingUsers[0].count} utilisateurs. Seeding ignoré.`);
+			console.log(
+				`✅ La base contient déjà ${existingUsers[0].count} utilisateurs. Seeding ignoré.`
+			);
 			process.exit(0);
 		}
 
@@ -74,14 +81,22 @@ const seed = async (): Promise<void> => {
 			const gender = faker.helpers.arrayElement(GENDERS);
 			const firstName = faker.person.firstName(gender === 'male' ? 'male' : 'female');
 			const lastName = faker.person.lastName();
-			const username = faker.internet.username({ firstName, lastName }).toLowerCase().slice(0, 20) + i;
+			const username =
+				faker.internet.username({ firstName, lastName }).toLowerCase().slice(0, 20) + i;
 			const email = `${username}@fakematcha.com`;
 
 			// Crée l'utilisateur
 			const [userResult] = await pool.query<ResultSetHeader>(
 				`INSERT INTO users (email, username, password_hash, first_name, last_name, is_verified, preferred_language)
 				 VALUES (?, ?, ?, ?, ?, TRUE, ?)`,
-				[email, username, PASSWORD_HASH, firstName, lastName, faker.helpers.arrayElement(['fr', 'en'])]
+				[
+					email,
+					username,
+					PASSWORD_HASH,
+					firstName,
+					lastName,
+					faker.helpers.arrayElement(['fr', 'en']),
+				]
 			);
 
 			const userId = userResult.insertId;
@@ -96,7 +111,18 @@ const seed = async (): Promise<void> => {
 			await pool.query(
 				`INSERT INTO profiles (user_id, gender, sexual_preference, biography, birth_date, latitude, longitude, city, country, fame_rating, location_updated_at)
 				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-				[userId, gender, sexualPreference, biography, birthDate, location.latitude, location.longitude, location.city, location.country, fameRating]
+				[
+					userId,
+					gender,
+					sexualPreference,
+					biography,
+					birthDate,
+					location.latitude,
+					location.longitude,
+					location.city,
+					location.country,
+					fameRating,
+				]
 			);
 
 			// Ajoute une photo de profil
@@ -108,20 +134,20 @@ const seed = async (): Promise<void> => {
 			);
 
 			// Met à jour la référence de la photo de profil
-			await pool.query(
-				'UPDATE profiles SET profile_picture_id = ? WHERE user_id = ?',
-				[photoResult.insertId, userId]
-			);
+			await pool.query('UPDATE profiles SET profile_picture_id = ? WHERE user_id = ?', [
+				photoResult.insertId,
+				userId,
+			]);
 
 			// Associe des tags aléatoires (entre 3 et 8 tags)
 			const nbTags = faker.number.int({ min: 3, max: 8 });
 			const userTags = faker.helpers.arrayElements(tagIds, nbTags);
 
 			for (const tagId of userTags) {
-				await pool.query(
-					'INSERT INTO user_tags (user_id, tag_id) VALUES (?, ?)',
-					[userId, tagId]
-				);
+				await pool.query('INSERT INTO user_tags (user_id, tag_id) VALUES (?, ?)', [
+					userId,
+					tagId,
+				]);
 			}
 
 			// Log de progression tous les 50 utilisateurs

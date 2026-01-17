@@ -13,6 +13,9 @@ import {
 	getLikers,
 	getLikedProfiles,
 	changePassword,
+	getLocationSource,
+	updateLocation,
+	getLocationFromIp,
 	type Photo,
 	type Tag,
 	type ProfilePreview,
@@ -64,6 +67,18 @@ export function ProfilePage() {
 	// Modal mot de passe
 	const [showPasswordModal, setShowPasswordModal] = useState(false);
 
+	// Localisation
+	const [locationSource, setLocationSource] = useState<'gps' | 'ip' | 'manual' | null>(null);
+	const [locationData, setLocationData] = useState<{ city: string; country: string } | null>(
+		null
+	);
+	const [isEditingLocation, setIsEditingLocation] = useState(false);
+	const [locationForm, setLocationForm] = useState({ city: '', country: '' });
+	const [isSavingLocation, setIsSavingLocation] = useState(false);
+	const [locationError, setLocationError] = useState('');
+	const [locationSuccess, setLocationSuccess] = useState('');
+	const currentLanguage = (localStorage.getItem('language') as 'fr' | 'en') || 'fr';
+
 	// Formulaire profil
 	const [formData, setFormData] = useState({
 		firstName: '',
@@ -89,15 +104,20 @@ export function ProfilePage() {
 	// Chargement initial
 	useEffect(() => {
 		async function loadProfile() {
-			const [profileResult, photosResult, tagsResult] = await Promise.all([
-				getMyProfile(),
-				getMyPhotos(),
-				getTags(),
-			]);
+			const [profileResult, photosResult, tagsResult, locationSourceResult] =
+				await Promise.all([getMyProfile(), getMyPhotos(), getTags(), getLocationSource()]);
 
 			if (profileResult.success && profileResult.data) {
 				setProfile(profileResult.data.profile);
 				setTags(profileResult.data.tags);
+
+				// Récupère la ville/pays depuis le profil
+				if (profileResult.data.profile.city || profileResult.data.profile.country) {
+					setLocationData({
+						city: profileResult.data.profile.city || '',
+						country: profileResult.data.profile.country || '',
+					});
+				}
 			}
 
 			if (photosResult.success && photosResult.data) {
@@ -106,6 +126,10 @@ export function ProfilePage() {
 
 			if (tagsResult.success && tagsResult.data) {
 				setAvailableTags(tagsResult.data.tags);
+			}
+
+			if (locationSourceResult.success && locationSourceResult.data) {
+				setLocationSource(locationSourceResult.data.source);
 			}
 
 			setIsLoading(false);
@@ -182,8 +206,10 @@ export function ProfilePage() {
 
 	function handleTabChange(tab: TabType) {
 		if (isEditing) {
-			// Annule les modifications si on change d'onglet
 			handleCancelEdit();
+		}
+		if (isEditingLocation) {
+			handleCancelEditLocation();
 		}
 		setActiveTab(tab);
 	}
@@ -341,6 +367,147 @@ export function ProfilePage() {
 		}
 	}
 
+	// Fonctions de gestion de la localisation
+	function handleStartEditLocation() {
+		setLocationForm({
+			city: locationData?.city || '',
+			country: locationData?.country || '',
+		});
+		setLocationError('');
+		setLocationSuccess('');
+		setIsEditingLocation(true);
+	}
+
+	function handleCancelEditLocation() {
+		setIsEditingLocation(false);
+		setLocationError('');
+	}
+
+	async function handleSaveManualLocation() {
+		setLocationError('');
+		setLocationSuccess('');
+
+		if (!locationForm.city.trim() || !locationForm.country.trim()) {
+			setLocationError('CITY_AND_COUNTRY_REQUIRED');
+			return;
+		}
+
+		setIsSavingLocation(true);
+
+		// Récupère la langue actuelle (depuis localStorage ou défaut 'fr')
+		const currentLanguage = (localStorage.getItem('language') as 'fr' | 'en') || 'fr';
+
+		const result = await updateLocation({
+			latitude: 0,
+			longitude: 0,
+			city: locationForm.city.trim(),
+			country: locationForm.country.trim(),
+			source: 'manual',
+			language: currentLanguage,
+		});
+
+		setIsSavingLocation(false);
+
+		if (result.success && result.data) {
+			// Utilise les valeurs corrigées retournées par le backend
+			setLocationData({
+				city: result.data.location.city,
+				country: result.data.location.country,
+			});
+			setLocationSource('manual');
+			setIsEditingLocation(false);
+			setLocationSuccess('LOCATION_UPDATED');
+		} else {
+			setLocationError(result.error?.code || 'SERVER_ERROR');
+		}
+	}
+
+	async function handleResetToAutoLocation() {
+		setLocationError('');
+		setLocationSuccess('');
+		setIsSavingLocation(true);
+
+		try {
+			if (navigator.geolocation) {
+				navigator.geolocation.getCurrentPosition(
+					async (position) => {
+						const result = await updateLocation({
+							latitude: position.coords.latitude,
+							longitude: position.coords.longitude,
+							source: 'gps',
+							language: currentLanguage,
+						});
+
+						if (result.success) {
+							setLocationSource('gps');
+							setLocationSuccess('LOCATION_AUTO_ENABLED');
+							// Recharge le profil pour avoir la ville/pays mis à jour
+							const profileResult = await getMyProfile();
+							if (profileResult.success && profileResult.data) {
+								setLocationData({
+									city: profileResult.data.profile.city || '',
+									country: profileResult.data.profile.country || '',
+								});
+							}
+						}
+						setIsSavingLocation(false);
+					},
+					async () => {
+						// GPS refusé, utilise IP
+						const ipResult = await getLocationFromIp(currentLanguage);
+
+						if (ipResult.success && ipResult.data) {
+							const result = await updateLocation({
+								...ipResult.data.location,
+								source: 'ip',
+								language: currentLanguage,
+							});
+
+							if (result.success) {
+								setLocationSource('ip');
+								setLocationData({
+									city: ipResult.data.location.city || '',
+									country: ipResult.data.location.country || '',
+								});
+								setLocationSuccess('LOCATION_AUTO_ENABLED');
+							}
+						} else {
+							setLocationError('LOCATION_ERROR');
+						}
+						setIsSavingLocation(false);
+					},
+					{ enableHighAccuracy: true, timeout: 10000 }
+				);
+			} else {
+				// Géolocalisation non supportée
+				const ipResult = await getLocationFromIp(currentLanguage);
+
+				if (ipResult.success && ipResult.data) {
+					const result = await updateLocation({
+						...ipResult.data.location,
+						source: 'ip',
+						language: currentLanguage,
+					});
+
+					if (result.success) {
+						setLocationSource('ip');
+						setLocationData({
+							city: ipResult.data.location.city || '',
+							country: ipResult.data.location.country || '',
+						});
+						setLocationSuccess('LOCATION_AUTO_ENABLED');
+					}
+				} else {
+					setLocationError('LOCATION_ERROR');
+				}
+				setIsSavingLocation(false);
+			}
+		} catch {
+			setIsSavingLocation(false);
+			setLocationError('LOCATION_ERROR');
+		}
+	}
+
 	// Rendu loading
 	if (isLoading) {
 		return (
@@ -409,10 +576,11 @@ export function ProfilePage() {
 										{calculateAge(profile.birth_date)} {t('profile.years')}
 									</span>
 								)}
-								{profile.city && (
+								{(locationData?.city || locationData?.country) && (
 									<span className="text-text-secondary">
-										📍 {profile.city}
-										{profile.country ? `, ${profile.country}` : ''}
+										📍 {locationData.city}
+										{locationData.city && locationData.country ? ', ' : ''}
+										{locationData.country}
 									</span>
 								)}
 								<span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 rounded-full">
@@ -538,6 +706,117 @@ export function ProfilePage() {
 												: '-'}
 										</p>
 									</div>
+								</div>
+							)}
+						</div>
+
+						{/* Section Localisation */}
+						<div className="bg-surface-elevated border border-border rounded-xl p-6">
+							<div className="flex justify-between items-start mb-4">
+								<h2 className="text-lg font-semibold text-text-primary">
+									{t('location.title')}
+								</h2>
+								{!isEditingLocation && !isEditing && (
+									<Button
+										variant="secondary"
+										onClick={handleStartEditLocation}
+										className="text-sm"
+									>
+										{t('location.manualEdit')}
+									</Button>
+								)}
+							</div>
+
+							{locationError && (
+								<div className="p-3 rounded-lg bg-error/10 border border-error/20 text-error text-sm mb-4">
+									{t(`errors.${locationError}`)}
+								</div>
+							)}
+							{locationSuccess && (
+								<div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-600 text-sm mb-4">
+									{t(
+										`location.${locationSuccess === 'LOCATION_UPDATED' ? 'updated' : 'autoEnabled'}`
+									)}
+								</div>
+							)}
+
+							{isEditingLocation ? (
+								<div className="space-y-4">
+									<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+										<Input
+											id="city"
+											label={t('location.city')}
+											value={locationForm.city}
+											onChange={(e) =>
+												setLocationForm({
+													...locationForm,
+													city: e.target.value,
+												})
+											}
+											placeholder={t('location.cityPlaceholder')}
+										/>
+										<Input
+											id="country"
+											label={t('location.country')}
+											value={locationForm.country}
+											onChange={(e) =>
+												setLocationForm({
+													...locationForm,
+													country: e.target.value,
+												})
+											}
+											placeholder={t('location.countryPlaceholder')}
+										/>
+									</div>
+									<div className="flex gap-3">
+										<Button
+											variant="secondary"
+											onClick={handleCancelEditLocation}
+											disabled={isSavingLocation}
+										>
+											{t('common.cancel')}
+										</Button>
+										<Button
+											variant="primary"
+											onClick={handleSaveManualLocation}
+											isLoading={isSavingLocation}
+										>
+											{t('common.save')}
+										</Button>
+									</div>
+								</div>
+							) : (
+								<div className="space-y-4">
+									<div className="flex items-center gap-3">
+										<span className="text-2xl">📍</span>
+										<div>
+											<p className="font-medium text-text-primary">
+												{locationData?.city || locationData?.country
+													? `${locationData.city}${locationData.city && locationData.country ? ', ' : ''}${locationData.country}`
+													: t('location.notSet')}
+											</p>
+											<p className="text-sm text-text-muted">
+												{locationSource === 'manual'
+													? t('location.sourceManual')
+													: locationSource
+														? t('location.sourceAuto')
+														: t('location.notSet')}
+											</p>
+										</div>
+									</div>
+
+									{locationSource === 'manual' && locationData?.city && (
+										<button
+											type="button"
+											onClick={handleResetToAutoLocation}
+											disabled={isSavingLocation}
+											className="text-sm text-primary hover:underline disabled:opacity-50"
+										>
+											{isSavingLocation
+												? t('common.loading')
+												: t('location.resetToAuto')}
+										</button>
+									)}
 								</div>
 							)}
 						</div>

@@ -131,6 +131,26 @@
 		"viewProfile": "View profile",
 		"birthDate": "Date of birth"
 	},
+	"location": {
+		"title": "Location",
+		"description": "We use your location to suggest nearby profiles.",
+		"requesting": "Getting your location...",
+		"allow": "Allow geolocation",
+		"denied": "Geolocation denied, location estimated by IP.",
+		"manualEdit": "Edit",
+		"city": "City",
+		"country": "Country",
+		"cityPlaceholder": "Paris, London, New York...",
+		"countryPlaceholder": "France, Switzerland, Belgium...",
+		"detected": "Location detected",
+		"approximate": "Approximate location",
+		"notSet": "Location not set",
+		"sourceAuto": "Automatic location",
+		"sourceManual": "Manually set location",
+		"resetToAuto": "Reset to automatic detection",
+		"updated": "Location updated successfully.",
+		"autoEnabled": "Automatic detection enabled."
+	},
 	"landing": {
 		"tagline": "Find love, not compromises.",
 		"cta": "Get started",
@@ -178,7 +198,12 @@
 		"PROFILE_PICTURE_REQUIRED": "A profile picture is required to finish.",
 		"INVALID_CURRENT_PASSWORD": "Current password is incorrect.",
 		"PASSWORD_MUST_BE_DIFFERENT": "New password must be different from current password.",
-		"PASSWORDS_DONT_MATCH": "Passwords don't match."
+		"PASSWORDS_DONT_MATCH": "Passwords don't match.",
+		"INVALID_COORDINATES": "Invalid coordinates.",
+		"COORDINATES_OUT_OF_RANGE": "Coordinates out of range.",
+		"LOCATION_ERROR": "Unable to determine your location.",
+		"LOCATION_NOT_FOUND": "Location not found. Check spelling or try a larger city.",
+		"CITY_AND_COUNTRY_REQUIRED": "City and country are required."
 	},
 	"tags": {
 		"vegan": "Vegan",
