@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import * as profileController from '../controllers/profile.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
+import * as blocksController from '../controllers/blocks.controller';
 
 const router = Router();
 
@@ -23,5 +24,8 @@ router.get('/likers', profileController.getLikers);
 
 // Profils que j'ai likés
 router.get('/liked', profileController.getLikedProfiles);
+
+// Liste des utilisateurs bloqués
+router.get('/blocked', blocksController.getBlockedUsers);
 
 export default router;
