@@ -14,9 +14,12 @@ const generateBirthDate = (): string => {
 	const minAge = 18;
 	const maxAge = 50;
 	const age = faker.number.int({ min: minAge, max: maxAge });
-	const birthYear = today.getFullYear() - age;
+
+	// Garantit que la personne a bien l'âge voulu en prenant une date passée dans l'année
+	const birthYear = today.getFullYear() - age - 1;
 	const birthMonth = faker.number.int({ min: 0, max: 11 });
 	const birthDay = faker.number.int({ min: 1, max: 28 });
+
 	return new Date(birthYear, birthMonth, birthDay).toISOString().split('T')[0];
 };
 
@@ -87,8 +90,8 @@ const seed = async (): Promise<void> => {
 
 			// Crée l'utilisateur
 			const [userResult] = await pool.query<ResultSetHeader>(
-				`INSERT INTO users (email, username, password_hash, first_name, last_name, is_verified, preferred_language)
-				 VALUES (?, ?, ?, ?, ?, TRUE, ?)`,
+				`INSERT INTO users (email, username, password_hash, first_name, last_name, is_verified, has_completed_onboarding, preferred_language)
+	 VALUES (?, ?, ?, ?, ?, TRUE, TRUE, ?)`,
 				[
 					email,
 					username,
