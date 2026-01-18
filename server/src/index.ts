@@ -9,6 +9,7 @@ import cookieParser from 'cookie-parser';
 import tagRoutes from './routes/tag.routes';
 import locationRoutes from './routes/location.routes';
 import usersRoutes from './routes/users.routes';
+import notificationsRoutes from './routes/notifications.routes';
 
 // Charge les variables d'environnement depuis .env
 dotenv.config();
@@ -37,6 +38,7 @@ app.use('/api/photos', photoRoutes);
 app.use('/api/tags', tagRoutes);
 app.use('/api/profile', locationRoutes);
 app.use('/api/users', usersRoutes);
+app.use('/api/notifications', notificationsRoutes);
 
 // Route de test + test l'accès à MySQL
 app.get('/api/health', async (_req: Request, res: Response) => {
