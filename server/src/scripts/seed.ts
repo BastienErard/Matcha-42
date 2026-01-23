@@ -131,9 +131,8 @@ const seed = async (): Promise<void> => {
 			// Ajoute une photo de profil
 			const photoUrl = generatePhotoUrl(gender, i);
 			const [photoResult] = await pool.query<ResultSetHeader>(
-				`INSERT INTO photos (user_id, filename, filepath, is_profile_picture, upload_order)
-				 VALUES (?, ?, ?, TRUE, 0)`,
-				[userId, `profile_${userId}.jpg`, photoUrl]
+				`INSERT INTO photos (user_id, filename, filepath, is_profile_picture, upload_order) VALUES (?, ?, ?, TRUE, 0)`,
+				[userId, photoUrl, photoUrl]
 			);
 
 			// Met à jour la référence de la photo de profil

@@ -1,5 +1,6 @@
 import pool from '../config/database';
 import { RowDataPacket } from 'mysql2';
+import { calculateAge } from '../utils/date';
 
 interface PublicProfile {
 	id: number;
@@ -12,6 +13,8 @@ interface PublicProfile {
 	biography: string | null;
 	city: string | null;
 	country: string | null;
+	latitude: number | null;
+	longitude: number | null;
 	fameRating: number;
 	isOnline: boolean;
 	lastLogin: Date | null;
@@ -35,7 +38,6 @@ interface ProfileInteractionStatus {
 
 // Récupère le profil public d'un utilisateur
 export const getPublicProfile = async (userId: number): Promise<PublicProfile | null> => {
-	// Récupère les infos de base
 	const [users] = await pool.query<RowDataPacket[]>(
 		`SELECT
 			u.id,
@@ -50,6 +52,8 @@ export const getPublicProfile = async (userId: number): Promise<PublicProfile | 
 			p.birth_date,
 			p.city,
 			p.country,
+			p.latitude,
+			p.longitude,
 			p.fame_rating
 		FROM users u
 		LEFT JOIN profiles p ON u.id = p.user_id
@@ -62,18 +66,6 @@ export const getPublicProfile = async (userId: number): Promise<PublicProfile | 
 	}
 
 	const user = users[0];
-
-	// Calcule l'âge
-	let age: number | null = null;
-	if (user.birth_date) {
-		const birthDate = new Date(user.birth_date);
-		const today = new Date();
-		age = today.getFullYear() - birthDate.getFullYear();
-		const monthDiff = today.getMonth() - birthDate.getMonth();
-		if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-			age--;
-		}
-	}
 
 	// Récupère les photos
 	const [photos] = await pool.query<RowDataPacket[]>(
@@ -98,12 +90,14 @@ export const getPublicProfile = async (userId: number): Promise<PublicProfile | 
 		username: user.username,
 		firstName: user.first_name,
 		lastName: user.last_name,
-		age,
+		age: calculateAge(user.birth_date),
 		gender: user.gender,
 		sexualPreference: user.sexual_preference,
 		biography: user.biography,
 		city: user.city,
 		country: user.country,
+		latitude: user.latitude,
+		longitude: user.longitude,
 		fameRating: user.fame_rating || 50,
 		isOnline: Boolean(user.is_online),
 		lastLogin: user.last_login,

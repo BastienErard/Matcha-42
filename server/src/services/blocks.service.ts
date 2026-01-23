@@ -1,6 +1,7 @@
 import pool from '../config/database';
 import { RowDataPacket } from 'mysql2';
 import { recalculateFameRating } from './famerating.service';
+import { calculateAge } from '../utils/date';
 
 interface BlockResult {
 	success: boolean;
@@ -74,6 +75,8 @@ export const getBlockedUsers = async (userId: number): Promise<any[]> => {
 			u.first_name,
 			u.last_name,
 			p.fame_rating,
+			p.birth_date,
+			p.city,
 			(SELECT filename FROM photos WHERE user_id = u.id AND is_profile_picture = TRUE LIMIT 1) as profile_photo,
 			b.created_at as blocked_at
 		FROM blocks b
@@ -90,6 +93,8 @@ export const getBlockedUsers = async (userId: number): Promise<any[]> => {
 		firstName: row.first_name,
 		lastName: row.last_name,
 		fameRating: row.fame_rating || 50,
+		age: calculateAge(row.birth_date),
+		city: row.city,
 		profilePhoto: row.profile_photo,
 		blockedAt: row.blocked_at,
 	}));

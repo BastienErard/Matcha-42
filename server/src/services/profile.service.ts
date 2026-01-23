@@ -1,5 +1,6 @@
 import pool from '../config/database';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
+import { calculateAge } from '../utils/date';
 
 interface Profile extends RowDataPacket {
 	user_id: number;
@@ -211,10 +212,12 @@ export const updateUserTags = async (userId: number, tagNames: string[]): Promis
 };
 
 // Récupère les utilisateurs qui ont visité le profil
-export const getProfileVisitors = async (userId: number): Promise<RowDataPacket[]> => {
+export const getProfileVisitors = async (userId: number): Promise<any[]> => {
 	const [rows] = await pool.query<RowDataPacket[]>(
 		`SELECT DISTINCT u.id, u.username, u.first_name, u.last_name,
-			p.gender, p.fame_rating, v.visited_at
+			p.gender, p.fame_rating, p.birth_date, p.city,
+			(SELECT filename FROM photos WHERE user_id = u.id AND is_profile_picture = TRUE LIMIT 1) as profile_photo,
+			v.visited_at
 		FROM visits v
 		JOIN users u ON v.visitor_id = u.id
 		LEFT JOIN profiles p ON u.id = p.user_id
@@ -223,14 +226,28 @@ export const getProfileVisitors = async (userId: number): Promise<RowDataPacket[
 		LIMIT 50`,
 		[userId]
 	);
-	return rows;
+
+	return rows.map((row) => ({
+		id: row.id,
+		username: row.username,
+		firstName: row.first_name,
+		lastName: row.last_name,
+		gender: row.gender,
+		fameRating: row.fame_rating || 50,
+		age: calculateAge(row.birth_date),
+		city: row.city,
+		profilePhoto: row.profile_photo,
+		visitedAt: row.visited_at,
+	}));
 };
 
 // Récupère les utilisateurs qui ont liké le profil
-export const getProfileLikers = async (userId: number): Promise<RowDataPacket[]> => {
+export const getProfileLikers = async (userId: number): Promise<any[]> => {
 	const [rows] = await pool.query<RowDataPacket[]>(
 		`SELECT u.id, u.username, u.first_name, u.last_name,
-			p.gender, p.fame_rating, l.created_at
+			p.gender, p.fame_rating, p.birth_date, p.city,
+			(SELECT filename FROM photos WHERE user_id = u.id AND is_profile_picture = TRUE LIMIT 1) as profile_photo,
+			l.created_at
 		FROM likes l
 		JOIN users u ON l.from_user_id = u.id
 		LEFT JOIN profiles p ON u.id = p.user_id
@@ -239,7 +256,19 @@ export const getProfileLikers = async (userId: number): Promise<RowDataPacket[]>
 		LIMIT 50`,
 		[userId]
 	);
-	return rows;
+
+	return rows.map((row) => ({
+		id: row.id,
+		username: row.username,
+		firstName: row.first_name,
+		lastName: row.last_name,
+		gender: row.gender,
+		fameRating: row.fame_rating || 50,
+		age: calculateAge(row.birth_date),
+		city: row.city,
+		profilePhoto: row.profile_photo,
+		likedAt: row.created_at,
+	}));
 };
 
 // Vérifie si l'utilisateur a une photo de profil
@@ -266,10 +295,12 @@ export const getOnboardingStatus = async (userId: number): Promise<boolean> => {
 };
 
 // Récupère les profils que l'utilisateur a likés
-export const getLikedProfiles = async (userId: number): Promise<RowDataPacket[]> => {
+export const getLikedProfiles = async (userId: number): Promise<any[]> => {
 	const [rows] = await pool.query<RowDataPacket[]>(
 		`SELECT u.id, u.username, u.first_name, u.last_name,
-			p.gender, p.fame_rating, l.created_at
+			p.gender, p.fame_rating, p.birth_date, p.city,
+			(SELECT filename FROM photos WHERE user_id = u.id AND is_profile_picture = TRUE LIMIT 1) as profile_photo,
+			l.created_at
 		FROM likes l
 		JOIN users u ON l.to_user_id = u.id
 		LEFT JOIN profiles p ON u.id = p.user_id
@@ -278,5 +309,17 @@ export const getLikedProfiles = async (userId: number): Promise<RowDataPacket[]>
 		LIMIT 50`,
 		[userId]
 	);
-	return rows;
+
+	return rows.map((row) => ({
+		id: row.id,
+		username: row.username,
+		firstName: row.first_name,
+		lastName: row.last_name,
+		gender: row.gender,
+		fameRating: row.fame_rating || 50,
+		age: calculateAge(row.birth_date),
+		city: row.city,
+		profilePhoto: row.profile_photo,
+		likedAt: row.created_at,
+	}));
 };

@@ -24,19 +24,13 @@ export const getPublicProfile = async (req: Request, res: Response): Promise<voi
 		// Récupère le statut d'interaction (likes, blocks)
 		const interaction = await usersService.getInteractionStatus(currentUserId, targetUserId);
 
-		// Si l'utilisateur est bloqué ou m'a bloqué, ne pas afficher le profil
-		if (interaction.hasBlocked) {
-			res.status(403).json({ code: 'USER_BLOCKED' });
-			return;
-		}
-
 		if (interaction.isBlockedBy) {
 			res.status(404).json({ code: 'USER_NOT_FOUND' });
 			return;
 		}
 
-		// Enregistre la visite (sauf si c'est son propre profil)
-		if (currentUserId !== targetUserId) {
+		// Enregistre la visite (sauf si bloqué ou propre profil)
+		if (currentUserId !== targetUserId && !interaction.hasBlocked) {
 			await usersService.recordVisit(currentUserId, targetUserId);
 		}
 
@@ -47,6 +41,7 @@ export const getPublicProfile = async (req: Request, res: Response): Promise<voi
 				hasLiked: interaction.hasLiked,
 				hasLikedMe: interaction.hasLikedMe,
 				isConnected: interaction.isConnected,
+				hasBlocked: interaction.hasBlocked,
 			},
 		});
 	} catch (error) {

@@ -41,15 +41,20 @@ export interface UpdateProfileData {
 	tags?: string[];
 }
 
-// Type pour les aperçus de profil (visitors, likers, liked)
+// Type pour les aperçus de profil (visitors, likers, liked, blocked)
 export interface ProfilePreview {
 	id: number;
 	username: string;
-	first_name: string;
-	last_name: string;
-	gender: string | null;
-	fame_rating: number;
-	created_at: string;
+	firstName: string;
+	lastName: string;
+	gender?: string | null;
+	fameRating: number;
+	age?: number | null;
+	city?: string | null;
+	profilePhoto: string | null;
+	visitedAt?: string;
+	likedAt?: string;
+	blockedAt?: string;
 }
 
 // Récupérer son profil
@@ -102,4 +107,8 @@ export async function updateUserInfo(data: {
 		method: 'PUT',
 		body: JSON.stringify(data),
 	});
+}
+// Récupérer les utilisateurs bloqués
+export async function getBlockedUsers() {
+	return apiRequest<{ blockedUsers: ProfilePreview[] }>('/profile/blocked');
 }

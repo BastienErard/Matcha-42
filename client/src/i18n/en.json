@@ -8,7 +8,10 @@
 		"confirm": "Confirm",
 		"back": "Back",
 		"next": "Next",
-		"or": "or"
+		"or": "or",
+		"previous": "Previous",
+		"close": "Close",
+		"retry": "Retry"
 	},
 	"auth": {
 		"login": "Log in",
@@ -83,6 +86,27 @@
 		"uploadError": "Upload error",
 		"maxPhotosReached": "Maximum 5 photos"
 	},
+	"userProfile": {
+		"online": "Online",
+		"lastLoginMinutes": "Seen {n} min ago",
+		"lastLoginHours": "Seen {n}h ago",
+		"lastLoginDays": "Seen {n}d ago",
+		"unknownLastLogin": "Offline",
+		"likesYou": "Likes you",
+		"connected": "Connected",
+		"about": "About",
+		"interests": "Interests",
+		"like": "Like ❤️",
+		"unlike": "Unlike",
+		"block": "Block",
+		"report": "Report",
+		"confirmBlock": "Are you sure you want to block this user? They won't be able to contact you anymore.",
+		"confirmReport": "Do you want to report this profile as a fake account?",
+		"reportSuccess": "Report sent. Thank you!",
+		"itsAMatch": "It's a Match!",
+		"youBlockedThisUser": "You have blocked this user",
+		"unblock": "Unblock"
+	},
 	"profile": {
 		"title": "My profile",
 		"tabs": {
@@ -121,9 +145,12 @@
 		"visitors": "Profile visitors",
 		"likers": "Who liked me",
 		"liked": "Profiles I liked",
+		"blocked": "Blocked profiles",
 		"noVisitors": "Nobody has visited your profile yet.",
 		"noLikers": "Nobody has liked you yet.",
 		"noLiked": "You haven't liked anyone yet.",
+		"noBlocked": "You haven't blocked anyone.",
+		"unblock": "Unblock",
 		"passwordChanged": "Password changed successfully.",
 		"profileUpdated": "Profile updated successfully.",
 		"minOneBio": "Biography is required.",
@@ -203,7 +230,17 @@
 		"COORDINATES_OUT_OF_RANGE": "Coordinates out of range.",
 		"LOCATION_ERROR": "Unable to determine your location.",
 		"LOCATION_NOT_FOUND": "Location not found. Check spelling or try a larger city.",
-		"CITY_AND_COUNTRY_REQUIRED": "City and country are required."
+		"CITY_AND_COUNTRY_REQUIRED": "City and country are required.",
+		"USER_NOT_FOUND": "This user doesn't exist or has been deleted",
+		"USER_BLOCKED": "You have blocked this user",
+		"CANNOT_VIEW_OWN_PROFILE": "You cannot view your own profile here",
+		"PROFILE_PICTURE_MISSING": "You need a profile picture to perform this action",
+		"CANNOT_LIKE_YOURSELF": "You cannot like yourself",
+		"ALREADY_LIKED": "You have already liked this user",
+		"LIKE_NOT_FOUND": "Like not found",
+		"CANNOT_BLOCK_YOURSELF": "You cannot block yourself",
+		"ALREADY_BLOCKED": "User already blocked",
+		"ALREADY_REPORTED": "You have already reported this user"
 	},
 	"tags": {
 		"vegan": "Vegan",

@@ -3,6 +3,7 @@ import { Layout } from '../../components/layout';
 import { Button, Input, PhotoUploader } from '../../components/ui';
 import { useTranslation } from '../../hooks/useTranslation';
 import { translateTag } from '../../utils/tags';
+import { UserProfileModal } from '../../components/common';
 import {
 	getMyProfile,
 	getMyPhotos,
@@ -12,6 +13,7 @@ import {
 	getVisitors,
 	getLikers,
 	getLikedProfiles,
+	getBlockedUsers,
 	changePassword,
 	getLocationSource,
 	updateLocation,
@@ -37,7 +39,7 @@ interface ProfileData {
 }
 
 type TabType = 'profile' | 'activity';
-type ActivitySubTab = 'visitors' | 'likers' | 'liked';
+type ActivitySubTab = 'visitors' | 'likers' | 'liked' | 'blocked';
 
 export function ProfilePage() {
 	const { t } = useTranslation();
@@ -45,6 +47,9 @@ export function ProfilePage() {
 	// Onglets
 	const [activeTab, setActiveTab] = useState<TabType>('profile');
 	const [activitySubTab, setActivitySubTab] = useState<ActivitySubTab>('visitors');
+
+	// Modal profil utilisateur
+	const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
 
 	// Données profil
 	const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -56,6 +61,7 @@ export function ProfilePage() {
 	const [visitors, setVisitors] = useState<ProfilePreview[]>([]);
 	const [likers, setLikers] = useState<ProfilePreview[]>([]);
 	const [liked, setLiked] = useState<ProfilePreview[]>([]);
+	const [blocked, setBlocked] = useState<ProfilePreview[]>([]);
 
 	// États UI
 	const [isLoading, setIsLoading] = useState(true);
@@ -146,10 +152,11 @@ export function ProfilePage() {
 	}, [activeTab]);
 
 	async function loadActivityData() {
-		const [visitorsResult, likersResult, likedResult] = await Promise.all([
+		const [visitorsResult, likersResult, likedResult, blockedResult] = await Promise.all([
 			getVisitors(),
 			getLikers(),
 			getLikedProfiles(),
+			getBlockedUsers(),
 		]);
 
 		if (visitorsResult.success && visitorsResult.data) {
@@ -160,6 +167,9 @@ export function ProfilePage() {
 		}
 		if (likedResult.success && likedResult.data) {
 			setLiked(likedResult.data.liked);
+		}
+		if (blockedResult.success && blockedResult.data) {
+			setBlocked(blockedResult.data.blockedUsers);
 		}
 	}
 
@@ -1046,7 +1056,7 @@ export function ProfilePage() {
 					<div className="space-y-6">
 						{/* Sous-onglets */}
 						<div className="flex gap-2">
-							{(['visitors', 'likers', 'liked'] as const).map((tab) => (
+							{(['visitors', 'likers', 'liked', 'blocked'] as const).map((tab) => (
 								<button
 									key={tab}
 									onClick={() => setActivitySubTab(tab)}
@@ -1065,7 +1075,11 @@ export function ProfilePage() {
 						<div className="bg-surface-elevated border border-border rounded-xl">
 							{activitySubTab === 'visitors' &&
 								(visitors.length > 0 ? (
-									<ProfileList profiles={visitors} t={t} />
+									<ProfileList
+										profiles={visitors}
+										t={t}
+										onProfileClick={(id) => setSelectedUserId(id)}
+									/>
 								) : (
 									<p className="p-6 text-text-muted text-center">
 										{t('profile.noVisitors')}
@@ -1074,7 +1088,11 @@ export function ProfilePage() {
 
 							{activitySubTab === 'likers' &&
 								(likers.length > 0 ? (
-									<ProfileList profiles={likers} t={t} />
+									<ProfileList
+										profiles={likers}
+										t={t}
+										onProfileClick={(id) => setSelectedUserId(id)}
+									/>
 								) : (
 									<p className="p-6 text-text-muted text-center">
 										{t('profile.noLikers')}
@@ -1083,10 +1101,27 @@ export function ProfilePage() {
 
 							{activitySubTab === 'liked' &&
 								(liked.length > 0 ? (
-									<ProfileList profiles={liked} t={t} />
+									<ProfileList
+										profiles={liked}
+										t={t}
+										onProfileClick={(id) => setSelectedUserId(id)}
+									/>
 								) : (
 									<p className="p-6 text-text-muted text-center">
 										{t('profile.noLiked')}
+									</p>
+								))}
+
+							{activitySubTab === 'blocked' &&
+								(blocked.length > 0 ? (
+									<ProfileList
+										profiles={blocked}
+										t={t}
+										onProfileClick={(id) => setSelectedUserId(id)}
+									/>
+								) : (
+									<p className="p-6 text-text-muted text-center">
+										{t('profile.noBlocked')}
 									</p>
 								))}
 						</div>
@@ -1178,56 +1213,153 @@ export function ProfilePage() {
 					</div>
 				</div>
 			)}
+
+			{/* Modal profil utilisateur */}
+			<UserProfileModal
+				userId={selectedUserId || 0}
+				isOpen={selectedUserId !== null}
+				onClose={() => setSelectedUserId(null)}
+				onUserBlocked={(userId) => {
+					setVisitors((prev) => prev.filter((p) => p.id !== userId));
+					setLikers((prev) => prev.filter((p) => p.id !== userId));
+					setLiked((prev) => prev.filter((p) => p.id !== userId));
+					loadActivityData();
+				}}
+				onUserUnblocked={() => {
+					loadActivityData();
+				}}
+				onInteractionChange={() => {
+					loadActivityData();
+				}}
+			/>
 		</Layout>
 	);
 }
 
-// Composant pour afficher une liste de profils
-function ProfileList({ profiles, t }: { profiles: ProfilePreview[]; t: (key: string) => string }) {
-	return (
-		<ul className="divide-y divide-border">
-			{profiles.map((profile) => (
-				<li
-					key={profile.id}
-					className="p-4 flex items-center justify-between hover:bg-surface transition-colors"
-				>
-					<div className="flex items-center gap-3">
-						<div className="w-10 h-10 rounded-full bg-surface-elevated border border-border flex items-center justify-center text-text-muted">
-							<svg
-								className="w-5 h-5"
-								fill="none"
-								viewBox="0 0 24 24"
-								stroke="currentColor"
-							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth={2}
-									d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-								/>
-							</svg>
-						</div>
-						<div>
-							<p className="font-medium text-text-primary">
-								{profile.first_name} {profile.last_name}
-							</p>
-							<p className="text-sm text-text-muted">@{profile.username}</p>
-						</div>
-					</div>
-					<div className="flex items-center gap-3">
-						<span className="text-sm text-text-muted flex items-center gap-1">
-							🔥 {profile.fame_rating}
-						</span>
+// Composant pour afficher une liste de profils avec pagination
+function ProfileList({
+	profiles,
+	t,
+	onProfileClick,
+}: {
+	profiles: ProfilePreview[];
+	t: (key: string) => string;
+	onProfileClick: (userId: number) => void;
+}) {
+	const [currentPage, setCurrentPage] = useState(1);
+	const profilesPerPage = 10;
 
-						<a
-							href={`/user/${profile.id}`}
-							className="text-primary hover:underline text-sm font-medium"
+	// Calcul pagination
+	const totalPages = Math.ceil(profiles.length / profilesPerPage);
+	const startIndex = (currentPage - 1) * profilesPerPage;
+	const currentProfiles = profiles.slice(startIndex, startIndex + profilesPerPage);
+
+	// Gère les 2 formats de photo : URL externe (randomuser) ou fichier local
+	function getPhotoUrl(filename: string | null): string | null {
+		if (!filename) return null;
+		if (filename.startsWith('http://') || filename.startsWith('https://')) {
+			return filename;
+		}
+		return `http://localhost:3000/uploads/${filename}`;
+	}
+
+	function handleProfileClick(profileId: number) {
+		onProfileClick(profileId);
+	}
+
+	return (
+		<div>
+			<ul className="divide-y divide-border">
+				{currentProfiles.map((profile) => {
+					const photoUrl = getPhotoUrl(profile.profilePhoto);
+
+					return (
+						<li
+							key={profile.id}
+							onClick={() => handleProfileClick(profile.id)}
+							className="p-4 flex items-center justify-between hover:bg-surface transition-colors cursor-pointer"
 						>
-							{t('profile.viewProfile')}
-						</a>
-					</div>
-				</li>
-			))}
-		</ul>
+							{/* Partie gauche : photo + infos */}
+							<div className="flex items-center gap-3">
+								{/* Photo de profil */}
+								<div className="w-12 h-12 rounded-full overflow-hidden border-2 border-border flex-shrink-0">
+									{photoUrl ? (
+										<img
+											src={photoUrl}
+											alt={profile.username}
+											className="w-full h-full object-cover"
+										/>
+									) : (
+										<div className="w-full h-full bg-surface-elevated flex items-center justify-center text-text-muted">
+											<svg
+												className="w-6 h-6"
+												fill="none"
+												viewBox="0 0 24 24"
+												stroke="currentColor"
+											>
+												<path
+													strokeLinecap="round"
+													strokeLinejoin="round"
+													strokeWidth={2}
+													d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+												/>
+											</svg>
+										</div>
+									)}
+								</div>
+
+								{/* Infos utilisateur */}
+								<div>
+									<p className="font-medium text-text-primary">
+										{profile.firstName} {profile.lastName}
+										{profile.age && (
+											<span className="text-text-muted font-normal ml-1">
+												{profile.age} {t('profile.years')}
+											</span>
+										)}
+									</p>
+									<p className="text-sm text-text-muted">@{profile.username}</p>
+									{profile.city && (
+										<p className="text-xs text-text-muted">📍 {profile.city}</p>
+									)}
+								</div>
+							</div>
+
+							{/* Partie droite : fame rating */}
+							<div className="flex items-center gap-2">
+								<span className="text-sm text-text-muted flex items-center gap-1">
+									🔥 {profile.fameRating}
+								</span>
+							</div>
+						</li>
+					);
+				})}
+			</ul>
+
+			{/* Pagination */}
+			{totalPages > 1 && (
+				<div className="p-4 flex items-center justify-between border-t border-border">
+					<button
+						onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+						disabled={currentPage === 1}
+						className="px-3 py-1.5 text-sm rounded-lg border border-border text-text-secondary hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+					>
+						{t('common.previous')}
+					</button>
+
+					<span className="text-sm text-text-muted">
+						{currentPage} / {totalPages}
+					</span>
+
+					<button
+						onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+						disabled={currentPage === totalPages}
+						className="px-3 py-1.5 text-sm rounded-lg border border-border text-text-secondary hover:bg-surface disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+					>
+						{t('common.next')}
+					</button>
+				</div>
+			)}
+		</div>
 	);
 }

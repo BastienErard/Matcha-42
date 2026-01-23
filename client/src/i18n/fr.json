@@ -8,7 +8,10 @@
 		"confirm": "Confirmer",
 		"back": "Retour",
 		"next": "Suivant",
-		"or": "ou"
+		"or": "ou",
+		"previous": "Précédent",
+		"close": "Fermer",
+		"retry": "Réessayer"
 	},
 	"auth": {
 		"login": "Se connecter",
@@ -83,6 +86,27 @@
 		"uploadError": "Erreur lors de l'upload",
 		"maxPhotosReached": "Maximum 5 photos"
 	},
+	"userProfile": {
+		"online": "En ligne",
+		"lastLoginMinutes": "Vu il y a {n} min",
+		"lastLoginHours": "Vu il y a {n}h",
+		"lastLoginDays": "Vu il y a {n}j",
+		"unknownLastLogin": "Hors ligne",
+		"likesYou": "Vous a liké",
+		"connected": "Connectés",
+		"about": "À propos",
+		"interests": "Centres d'intérêt",
+		"like": "J'aime ❤️",
+		"unlike": "Je n'aime plus",
+		"block": "Bloquer",
+		"report": "Signaler",
+		"confirmBlock": "Voulez-vous vraiment bloquer cet utilisateur ? Il ne pourra plus vous contacter.",
+		"confirmReport": "Voulez-vous signaler ce profil comme faux compte ?",
+		"reportSuccess": "Signalement envoyé. Merci !",
+		"itsAMatch": "C'est un Match !",
+		"youBlockedThisUser": "Vous avez bloqué cet utilisateur",
+		"unblock": "Débloquer"
+	},
 	"profile": {
 		"title": "Mon profil",
 		"tabs": {
@@ -121,9 +145,12 @@
 		"visitors": "Qui a vu mon profil",
 		"likers": "Qui m'a liké",
 		"liked": "Profils que j'ai likés",
+		"blocked": "Profils bloqués",
 		"noVisitors": "Personne n'a encore visité votre profil.",
 		"noLikers": "Personne ne vous a encore liké.",
 		"noLiked": "Vous n'avez encore liké personne.",
+		"noBlocked": "Vous n'avez bloqué personne.",
+		"unblock": "Débloquer",
 		"passwordChanged": "Mot de passe modifié avec succès.",
 		"profileUpdated": "Profil mis à jour avec succès.",
 		"minOneBio": "La biographie est obligatoire.",
@@ -203,7 +230,17 @@
 		"COORDINATES_OUT_OF_RANGE": "Coordonnées hors limites.",
 		"LOCATION_ERROR": "Impossible de déterminer votre position.",
 		"LOCATION_NOT_FOUND": "Lieu introuvable. Vérifiez l'orthographe ou essayez une ville plus grande.",
-		"CITY_AND_COUNTRY_REQUIRED": "La ville et le pays sont requis."
+		"CITY_AND_COUNTRY_REQUIRED": "La ville et le pays sont requis.",
+		"USER_NOT_FOUND": "Cet utilisateur n'existe pas ou a été supprimé",
+		"USER_BLOCKED": "Vous avez bloqué cet utilisateur",
+		"CANNOT_VIEW_OWN_PROFILE": "Vous ne pouvez pas voir votre propre profil ici",
+		"PROFILE_PICTURE_MISSING": "Vous devez avoir une photo de profil pour effectuer cette action",
+		"CANNOT_LIKE_YOURSELF": "Vous ne pouvez pas vous liker vous-même",
+		"ALREADY_LIKED": "Vous avez déjà liké cet utilisateur",
+		"LIKE_NOT_FOUND": "Like introuvable",
+		"CANNOT_BLOCK_YOURSELF": "Vous ne pouvez pas vous bloquer vous-même",
+		"ALREADY_BLOCKED": "Utilisateur déjà bloqué",
+		"ALREADY_REPORTED": "Vous avez déjà signalé cet utilisateur"
 	},
 	"tags": {
 		"vegan": "Végane",

@@ -1,6 +1,7 @@
 import pool from '../config/database';
 import { RowDataPacket } from 'mysql2';
 import { calculateDistance } from './location.service';
+import { calculateAge } from '../utils/date';
 
 interface BrowseFilters {
 	minAge?: number;
@@ -21,10 +22,12 @@ interface ProfileSuggestion {
 	username: string;
 	firstName: string;
 	lastName: string;
-	age: number;
+	age: number | null;
 	gender: string;
 	city: string | null;
 	country: string | null;
+	latitude: number | null;
+	longitude: number | null;
 	fameRating: number;
 	profilePhoto: string | null;
 	distance: number | null;
@@ -98,11 +101,7 @@ const buildOrientationFilter = (
 };
 
 // Construit la clause ORDER BY multi-critères
-const buildOrderClause = (
-	sortBy: string,
-	order: string,
-	hasCoordinates: boolean
-): string => {
+const buildOrderClause = (sortBy: string, order: string, hasCoordinates: boolean): string => {
 	// Définit les expressions de tri pour chaque critère
 	const distanceExpr = hasCoordinates
 		? '(POW(p.latitude - @lat, 2) + POW(p.longitude - @lng, 2))'
@@ -202,7 +201,10 @@ export const getSuggestions = async (
 	params.push(userId, userId);
 
 	// Filtre par orientation sexuelle
-	const orientationFilter = buildOrientationFilter(currentUser.gender, currentUser.sexualPreference);
+	const orientationFilter = buildOrientationFilter(
+		currentUser.gender,
+		currentUser.sexualPreference
+	);
 	query += orientationFilter.clause;
 	params.push(...orientationFilter.params);
 
@@ -332,23 +334,11 @@ export const getSuggestions = async (
 			return null;
 		}
 
-		// Calcule l'âge
-		let age = 0;
-		if (row.birth_date) {
-			const birthDate = new Date(row.birth_date);
-			const today = new Date();
-			age = today.getFullYear() - birthDate.getFullYear();
-			const monthDiff = today.getMonth() - birthDate.getMonth();
-			if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-				age--;
-			}
-		}
-
 		// Récupère les tags de l'utilisateur
 		const [tagRows] = await pool.query<RowDataPacket[]>(
 			`SELECT t.name FROM user_tags ut
-			 JOIN tags t ON ut.tag_id = t.id
-			 WHERE ut.user_id = ?`,
+		 JOIN tags t ON ut.tag_id = t.id
+		 WHERE ut.user_id = ?`,
 			[row.id]
 		);
 
@@ -357,10 +347,12 @@ export const getSuggestions = async (
 			username: row.username,
 			firstName: row.first_name,
 			lastName: row.last_name,
-			age,
+			age: calculateAge(row.birth_date),
 			gender: row.gender,
 			city: row.city,
 			country: row.country,
+			latitude: row.latitude,
+			longitude: row.longitude,
 			fameRating: row.fame_rating || 50,
 			profilePhoto: row.profile_photo,
 			distance,
