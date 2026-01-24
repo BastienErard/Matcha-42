@@ -6,7 +6,7 @@ export const getSuggestions = async (req: Request, res: Response): Promise<void>
 	const userId = req.user!.userId;
 
 	// Paramètres de pagination
-	const limit = Math.min(parseInt(req.query.limit as string, 10) || 20, 50);
+const limit = Math.min(parseInt(req.query.limit as string, 10) || 20, 500);
 	const offset = parseInt(req.query.offset as string, 10) || 0;
 
 	// Paramètres de tri
@@ -35,6 +35,7 @@ export const getSuggestions = async (req: Request, res: Response): Promise<void>
 		minFame?: number;
 		maxFame?: number;
 		tags?: string[];
+		location?: string;
 	} = {};
 
 	if (req.query.minAge) {
@@ -83,6 +84,10 @@ export const getSuggestions = async (req: Request, res: Response): Promise<void>
 			.split(',')
 			.map((t) => t.trim())
 			.filter((t) => t.length > 0);
+	}
+
+	if (req.query.location) {
+		filters.location = (req.query.location as string).trim();
 	}
 
 	try {

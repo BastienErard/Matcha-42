@@ -274,6 +274,34 @@
 		"football": "Football",
 		"basketball": "Basketball"
 	},
+	"discover": {
+		"title": "Discover",
+		"profilesFound": "profiles found",
+		"filters": "Filters",
+		"noProfiles": "No profiles match your criteria",
+		"resetFilters": "Reset filters",
+		"applyFilters": "Apply",
+		"commonTags": "in common",
+		"lessThan1km": "< 1 km",
+		"ageRange": "Age range",
+		"maxDistance": "Maximum distance",
+		"fameRange": "Popularity",
+		"interests": "Interests",
+		"noLimit": "No limit",
+		"location": "Location",
+		"locationPlaceholder": "City or country...",
+		"listView": "List",
+		"mapView": "Map",
+		"yourLocation": "You are here",
+		"profilesHere": "profiles here",
+		"clickToView": "Click to view profile",
+		"sortBy": {
+			"distance": "Distance",
+			"age": "Age",
+			"fame": "Popularity",
+			"tags": "Common interests"
+		}
+	},
 	"notFound": {
 		"title": "Page not found",
 		"message": "This page doesn't exist or has been moved."

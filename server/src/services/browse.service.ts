@@ -10,6 +10,7 @@ interface BrowseFilters {
 	minFame?: number;
 	maxFame?: number;
 	tags?: string[];
+	location?: string;
 }
 
 interface BrowseSort {
@@ -159,8 +160,6 @@ export const getSuggestions = async (
 		return { profiles: [], total: 0 };
 	}
 
-	const hasCoordinates = !!(currentUser.latitude && currentUser.longitude);
-
 	// Construit la requête de base
 	let query = `
 		SELECT DISTINCT
@@ -228,7 +227,7 @@ export const getSuggestions = async (
 		params.push(filters.maxFame);
 	}
 
-	// Filtre par tags (recherche les profils qui ont AU MOINS un des tags demandés)
+	// Filtre par tags
 	if (filters.tags && filters.tags.length > 0) {
 		query += `
 			AND u.id IN (
@@ -242,107 +241,45 @@ export const getSuggestions = async (
 		params.push(...filters.tags);
 	}
 
-	// Compte le total avec les mêmes filtres
-	let countQuery = `
-		SELECT COUNT(DISTINCT u.id) as total
-		FROM users u
-		JOIN profiles p ON u.id = p.user_id
-		WHERE u.id != ?
-		AND u.is_verified = TRUE
-		AND u.has_completed_onboarding = TRUE
-		AND u.id NOT IN (
-			SELECT blocked_user_id FROM blocks WHERE blocker_id = ?
-			UNION
-			SELECT blocker_id FROM blocks WHERE blocked_user_id = ?
-		)
-	`;
-
-	const countParams: any[] = [userId, userId, userId];
-
-	countQuery += orientationFilter.clause;
-	countParams.push(...orientationFilter.params);
-
-	if (filters.minAge) {
-		countQuery += ` AND TIMESTAMPDIFF(YEAR, p.birth_date, CURDATE()) >= ?`;
-		countParams.push(filters.minAge);
+	// Filtre par lieu
+	if (filters.location) {
+		query += ` AND (LOWER(p.city) LIKE LOWER(?) OR LOWER(p.country) LIKE LOWER(?))`;
+		const locationPattern = `%${filters.location}%`;
+		params.push(locationPattern, locationPattern);
 	}
-	if (filters.maxAge) {
-		countQuery += ` AND TIMESTAMPDIFF(YEAR, p.birth_date, CURDATE()) <= ?`;
-		countParams.push(filters.maxAge);
-	}
-	if (filters.minFame !== undefined) {
-		countQuery += ` AND p.fame_rating >= ?`;
-		countParams.push(filters.minFame);
-	}
-	if (filters.maxFame !== undefined) {
-		countQuery += ` AND p.fame_rating <= ?`;
-		countParams.push(filters.maxFame);
-	}
-	if (filters.tags && filters.tags.length > 0) {
-		countQuery += `
-			AND u.id IN (
-				SELECT ut.user_id FROM user_tags ut
-				JOIN tags t ON ut.tag_id = t.id
-				WHERE t.name IN (${filters.tags.map(() => '?').join(',')})
-				GROUP BY ut.user_id
-				HAVING COUNT(DISTINCT t.name) >= 1
-			)
-		`;
-		countParams.push(...filters.tags);
-	}
-
-	const [countRows] = await pool.query<RowDataPacket[]>(countQuery, countParams);
-	const total = countRows[0]?.total || 0;
-
-	// Tri multi-critères
-	const orderClause = buildOrderClause(sort.sortBy, sort.order, hasCoordinates);
-
-	// Remplace les variables @lat et @lng si on a des coordonnées
-	if (hasCoordinates) {
-		query += ` ${orderClause.replace(/@lat/g, '?').replace(/@lng/g, '?')}`;
-		// Compte combien de fois on a besoin des coordonnées
-		const latCount = (orderClause.match(/@lat/g) || []).length;
-		for (let i = 0; i < latCount; i++) {
-			params.push(currentUser.latitude, currentUser.longitude);
-		}
-	} else {
-		query += ` ${orderClause}`;
-	}
-
-	// Pagination
-	query += ` LIMIT ? OFFSET ?`;
-	params.push(limit, offset);
 
 	// Exécute la requête
 	const [rows] = await pool.query<RowDataPacket[]>(query, params);
 
-	// Transforme les résultats
-	const profilesPromises = rows.map(async (row) => {
-		// Calcule la distance si on a les coordonnées
+	// Transforme les résultats et calcule les distances
+	const allProfiles: ProfileSuggestion[] = [];
+
+	for (const row of rows) {
+		// Calcule la distance avec Haversine
 		let distance: number | null = null;
 		if (currentUser.latitude && currentUser.longitude && row.latitude && row.longitude) {
 			distance = calculateDistance(
 				currentUser.latitude,
 				currentUser.longitude,
-				row.latitude,
-				row.longitude
+				parseFloat(row.latitude),
+				parseFloat(row.longitude)
 			);
 		}
 
-		// Filtre par distance si demandé (post-filtrage car calcul Haversine)
+		// Filtre par distance si demandé
 		if (filters.maxDistance && distance !== null && distance > filters.maxDistance) {
-			return null;
+			continue;
 		}
 
-		// Récupère les tags de l'utilisateur
+		// Récupère les tags
 		const [tagRows] = await pool.query<RowDataPacket[]>(
 			`SELECT t.name FROM user_tags ut
-		 JOIN tags t ON ut.tag_id = t.id
-		 WHERE ut.user_id = ?`,
+			 JOIN tags t ON ut.tag_id = t.id
+			 WHERE ut.user_id = ?`,
 			[row.id]
 		);
 
-		return {
+		allProfiles.push({
 			id: row.id,
 			username: row.username,
 			firstName: row.first_name,
@@ -351,8 +288,8 @@ export const getSuggestions = async (
 			gender: row.gender,
 			city: row.city,
 			country: row.country,
-			latitude: row.latitude,
-			longitude: row.longitude,
+			latitude: parseFloat(row.latitude) || null,
+			longitude: parseFloat(row.longitude) || null,
 			fameRating: row.fame_rating || 50,
 			profilePhoto: row.profile_photo,
 			distance,
@@ -360,11 +297,70 @@ export const getSuggestions = async (
 			tags: tagRows.map((t) => t.name),
 			isOnline: Boolean(row.is_online),
 			lastLogin: row.last_login,
+		});
+	}
+
+	// Tri multi-critères en JavaScript (avec vraies distances)
+	allProfiles.sort((a, b) => {
+		const compareDistance = (x: ProfileSuggestion, y: ProfileSuggestion) => {
+			if (x.distance === null && y.distance === null) return 0;
+			if (x.distance === null) return 1;
+			if (y.distance === null) return -1;
+			return x.distance - y.distance;
 		};
+
+		const compareAge = (x: ProfileSuggestion, y: ProfileSuggestion) => {
+			if (x.age === null && y.age === null) return 0;
+			if (x.age === null) return 1;
+			if (y.age === null) return -1;
+			return x.age - y.age;
+		};
+
+		const compareFame = (x: ProfileSuggestion, y: ProfileSuggestion) => {
+			return y.fameRating - x.fameRating; // DESC par défaut
+		};
+
+		const compareTags = (x: ProfileSuggestion, y: ProfileSuggestion) => {
+			return y.commonTagsCount - x.commonTagsCount; // DESC par défaut
+		};
+
+		// Applique le critère principal avec son ordre
+		let primaryResult = 0;
+		switch (sort.sortBy) {
+			case 'distance':
+				primaryResult =
+					sort.order === 'asc' ? compareDistance(a, b) : compareDistance(b, a);
+				break;
+			case 'age':
+				primaryResult = sort.order === 'asc' ? compareAge(a, b) : compareAge(b, a);
+				break;
+			case 'fame':
+				primaryResult = sort.order === 'asc' ? -compareFame(a, b) : compareFame(a, b);
+				break;
+			case 'tags':
+				primaryResult = sort.order === 'asc' ? -compareTags(a, b) : compareTags(a, b);
+				break;
+		}
+
+		if (primaryResult !== 0) return primaryResult;
+
+		// Critères secondaires (ordre fixe : distance, age, tags, fame)
+		const distResult = compareDistance(a, b);
+		if (distResult !== 0) return distResult;
+
+		const ageResult = compareAge(a, b);
+		if (ageResult !== 0) return ageResult;
+
+		const tagsResult = compareTags(a, b);
+		if (tagsResult !== 0) return tagsResult;
+
+		return compareFame(a, b);
 	});
 
-	const profilesWithNulls = await Promise.all(profilesPromises);
-	const profiles = profilesWithNulls.filter((p): p is ProfileSuggestion => p !== null);
+	// Total après filtrage
+	const total = allProfiles.length;
 
-	return { profiles, total };
+	const paginatedProfiles = allProfiles.slice(offset, offset + limit);
+
+	return { profiles: paginatedProfiles, total };
 };

@@ -8,7 +8,7 @@ const NB_USERS = 500;
 const GENDERS = ['male', 'female'] as const;
 const PREFERENCES = ['male', 'female', 'both'] as const;
 
-// Génère une date de naissance entre 18 et 65 ans
+// Génère une date de naissance entre 18 et 50 ans
 const generateBirthDate = (): string => {
 	const today = new Date();
 	const minAge = 18;

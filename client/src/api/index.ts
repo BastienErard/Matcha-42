@@ -3,3 +3,4 @@ export * from './profile';
 export * from './photos';
 export * from './location';
 export * from './users';
+export * from './browse';

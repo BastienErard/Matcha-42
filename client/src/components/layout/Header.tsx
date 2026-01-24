@@ -47,9 +47,6 @@ export function Header({ variant = 'guest' }: HeaderProps) {
 							<Link to="/discover" className={navLinkClasses}>
 								{t('nav.discover')}
 							</Link>
-							<Link to="/search" className={navLinkClasses}>
-								{t('nav.search')}
-							</Link>
 							<Link to="/messages" className={navLinkClasses}>
 								{t('nav.messages')}
 							</Link>
