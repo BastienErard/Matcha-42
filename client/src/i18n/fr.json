@@ -188,7 +188,8 @@
 		"search": "Recherche",
 		"messages": "Messages",
 		"profile": "Profil",
-		"notifications": "Notifications"
+		"notifications": "Notifications",
+		"menu": "Menu"
 	},
 	"footer": {
 		"copyright": "© 2025 Matcha",
@@ -301,6 +302,22 @@
 			"fame": "Popularité",
 			"tags": "Intérêts communs"
 		}
+	},
+	"notifications": {
+		"title": "Notifications",
+		"empty": "Aucune notification",
+		"markAllRead": "Tout marquer comme lu",
+		"justNow": "À l'instant",
+		"minutesAgo": "Il y a {n} min",
+		"hoursAgo": "Il y a {n}h",
+		"daysAgo": "Il y a {n}j",
+		"someone": "Quelqu'un",
+		"likedYou": "{name} vous a aimé",
+		"unlikedYou": "{name} ne vous aime plus",
+		"visitedYou": "{name} a visité votre profil",
+		"messagedYou": "{name} vous a envoyé un message",
+		"matchedYou": "C'est un match avec {name} !",
+		"newNotification": "Nouvelle notification"
 	},
 	"notFound": {
 		"title": "Page introuvable",

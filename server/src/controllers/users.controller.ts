@@ -29,9 +29,14 @@ export const getPublicProfile = async (req: Request, res: Response): Promise<voi
 			return;
 		}
 
-		// Enregistre la visite (sauf si bloqué ou propre profil)
+		// Enregistre la visite et notifie (sauf si bloqué ou propre profil)
 		if (currentUserId !== targetUserId && !interaction.hasBlocked) {
-			await usersService.recordVisit(currentUserId, targetUserId);
+			const isNewVisit = await usersService.recordVisit(currentUserId, targetUserId);
+
+			// Notifie seulement si c'est une nouvelle visite (pas déjà visité aujourd'hui)
+			if (isNewVisit) {
+				await usersService.createVisitNotification(currentUserId, targetUserId);
+			}
 		}
 
 		// Retourne le profil avec le statut d'interaction

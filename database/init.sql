@@ -138,7 +138,7 @@ CREATE TABLE visits (
 	visited_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	FOREIGN KEY (visitor_id) REFERENCES users(id) ON DELETE CASCADE,
 	FOREIGN KEY (visited_user_id) REFERENCES users(id) ON DELETE CASCADE,
-	UNIQUE KEY unique_daily_visit (visitor_id, visited_user_id, visited_at),
+	UNIQUE KEY unique_visit (visitor_id, visited_user_id),
 	INDEX idx_visited (visited_user_id),
 	INDEX idx_visited_at (visited_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

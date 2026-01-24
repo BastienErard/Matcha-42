@@ -4,3 +4,4 @@ export * from './photos';
 export * from './location';
 export * from './users';
 export * from './browse';
+export * from './notifications';

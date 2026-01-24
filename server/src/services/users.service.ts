@@ -1,6 +1,7 @@
 import pool from '../config/database';
 import { RowDataPacket } from 'mysql2';
 import { calculateAge } from '../utils/date';
+import * as notificationsService from './notifications.service';
 
 interface PublicProfile {
 	id: number;
@@ -151,20 +152,42 @@ export const getInteractionStatus = async (
 	};
 };
 
-// Enregistre une visite de profil
-export const recordVisit = async (visitorId: number, visitedId: number): Promise<void> => {
+// Enregistre une visite de profil - retourne true si c'est une nouvelle visite
+export const recordVisit = async (visitorId: number, visitedId: number): Promise<boolean> => {
 	// Ne pas enregistrer si c'est son propre profil
 	if (visitorId === visitedId) {
-		return;
+		return false;
 	}
 
-	// Insère ou met à jour la visite (une seule entrée par paire visiteur/visité)
-	await pool.query(
-		`INSERT INTO visits (visitor_id, visited_user_id, visited_at)
-		VALUES (?, ?, NOW())
-		ON DUPLICATE KEY UPDATE visited_at = NOW()`,
+	// Vérifie si une visite existe déjà aujourd'hui
+	const [existing] = await pool.query<RowDataPacket[]>(
+		`SELECT id, DATE(visited_at) as visit_date FROM visits
+		 WHERE visitor_id = ? AND visited_user_id = ?`,
 		[visitorId, visitedId]
 	);
+
+	const today = new Date().toISOString().split('T')[0];
+
+	if (existing.length > 0) {
+		const lastVisitDate = existing[0].visit_date;
+		const isToday = lastVisitDate && lastVisitDate.toISOString().split('T')[0] === today;
+
+		// Met à jour le timestamp
+		await pool.query(
+			`UPDATE visits SET visited_at = NOW() WHERE visitor_id = ? AND visited_user_id = ?`,
+			[visitorId, visitedId]
+		);
+
+		// Si déjà visité aujourd'hui, pas une "nouvelle" visite
+		return !isToday;
+	}
+
+	// Première visite
+	await pool.query(
+		`INSERT INTO visits (visitor_id, visited_user_id, visited_at) VALUES (?, ?, NOW())`,
+		[visitorId, visitedId]
+	);
+	return true;
 };
 
 // Vérifie si un utilisateur existe et est vérifié
@@ -174,4 +197,20 @@ export const userExists = async (userId: number): Promise<boolean> => {
 		[userId]
 	);
 	return rows.length > 0;
+};
+
+// Crée une notification de visite
+export const createVisitNotification = async (
+	visitorId: number,
+	visitedUserId: number
+): Promise<void> => {
+	// Supprime les anciennes notifications de visite du même visiteur (anti-spam)
+	await pool.query(
+		`DELETE FROM notifications
+		 WHERE user_id = ? AND from_user_id = ? AND type = 'visit'`,
+		[visitedUserId, visitorId]
+	);
+
+	// Crée la nouvelle notification
+	await notificationsService.createNotification(visitedUserId, 'visit', visitorId);
 };

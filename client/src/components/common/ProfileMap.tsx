@@ -17,59 +17,129 @@ L.Icon.Default.mergeOptions({
 	shadowUrl: markerShadow,
 });
 
-// Icône personnalisée pour les profils
-const createProfileIcon = (isOnline: boolean) => {
+function getPhotoUrl(filename: string | null): string | null {
+	if (!filename) return null;
+	if (filename.startsWith('http://') || filename.startsWith('https://')) {
+		return filename;
+	}
+	return `http://localhost:3000/uploads/${filename}`;
+}
+
+// Icône avec photo de profil
+const createProfileIcon = (photoUrl: string | null, isOnline: boolean) => {
+	const placeholderSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23999"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
+	const backgroundImage = photoUrl
+		? `url(${photoUrl})`
+		: `url("data:image/svg+xml,${placeholderSvg}")`;
+
 	return L.divIcon({
-		className: 'custom-marker',
+		className: 'custom-profile-marker',
 		html: `
 			<div style="
-				width: 40px;
-				height: 40px;
+				width: 48px;
+				height: 48px;
 				border-radius: 50%;
-				background: ${isOnline ? '#22c55e' : '#e63946'};
-				border: 3px solid white;
+				background-image: ${backgroundImage};
+				background-size: cover;
+				background-position: center;
+				background-color: #e5e5e5;
+				border: 3px solid ${isOnline ? '#22c55e' : 'white'};
 				box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				color: white;
-				font-weight: bold;
-				font-size: 14px;
-			">
-				${isOnline ? '●' : ''}
-			</div>
+				cursor: pointer;
+			"></div>
+			${
+				isOnline
+					? `
+				<div style="
+					position: absolute;
+					bottom: 2px;
+					right: 2px;
+					width: 12px;
+					height: 12px;
+					background: #22c55e;
+					border: 2px solid white;
+					border-radius: 50%;
+				"></div>
+			`
+					: ''
+			}
 		`,
-		iconSize: [40, 40],
-		iconAnchor: [20, 40],
-		popupAnchor: [0, -40],
+		iconSize: [48, 48],
+		iconAnchor: [24, 48],
+		popupAnchor: [0, -48],
 	});
 };
 
 // Icône pour les clusters (plusieurs profils au même endroit)
-const createClusterIcon = (count: number) => {
+const createClusterIcon = (profiles: BrowseProfile[]) => {
+	const count = profiles.length;
+
+	// Affiche jusqu'à 3 photos en preview
+	const previewPhotos = profiles.slice(0, 3);
+	const photosHtml = previewPhotos
+		.map((p, i) => {
+			const photoUrl = getPhotoUrl(p.profilePhoto);
+			const placeholderSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23999"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
+			const backgroundImage = photoUrl
+				? `url(${photoUrl})`
+				: `url("data:image/svg+xml,${placeholderSvg}")`;
+
+			const offset = i * 12;
+			return `
+			<div style="
+				position: absolute;
+				left: ${offset}px;
+				top: ${offset}px;
+				width: 32px;
+				height: 32px;
+				border-radius: 50%;
+				background-image: ${backgroundImage};
+				background-size: cover;
+				background-position: center;
+				background-color: #e5e5e5;
+				border: 2px solid white;
+				box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+				z-index: ${3 - i};
+			"></div>
+		`;
+		})
+		.join('');
+
 	return L.divIcon({
-		className: 'custom-cluster',
+		className: 'custom-cluster-marker',
 		html: `
 			<div style="
-				width: 50px;
-				height: 50px;
-				border-radius: 50%;
-				background: linear-gradient(135deg, #e63946, #c1121f);
-				border: 3px solid white;
-				box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				color: white;
-				font-weight: bold;
-				font-size: 16px;
+				position: relative;
+				width: 60px;
+				height: 60px;
 			">
-				${count}
+				${photosHtml}
+				<div style="
+					position: absolute;
+					bottom: -4px;
+					right: -4px;
+					min-width: 24px;
+					height: 24px;
+					padding: 0 6px;
+					background: linear-gradient(135deg, #e63946, #c1121f);
+					border: 2px solid white;
+					border-radius: 12px;
+					box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					color: white;
+					font-weight: bold;
+					font-size: 12px;
+					z-index: 10;
+				">
+					${count}
+				</div>
 			</div>
 		`,
-		iconSize: [50, 50],
-		iconAnchor: [25, 50],
-		popupAnchor: [0, -50],
+		iconSize: [60, 60],
+		iconAnchor: [30, 60],
+		popupAnchor: [0, -60],
 	});
 };
 
@@ -115,18 +185,10 @@ export function ProfileMap({ profiles, userLocation, onProfileClick }: ProfileMa
 	// Centre par défaut : Suisse ou position utilisateur
 	const defaultCenter: [number, number] = userLocation
 		? [userLocation.lat, userLocation.lng]
-		: [46.8182, 8.2275]; // Centre de la Suisse
+		: [46.8182, 8.2275];
 
 	// Groupe les profils par position
 	const groupedProfiles = groupProfilesByLocation(profiles);
-
-	function getPhotoUrl(filename: string | null): string | null {
-		if (!filename) return null;
-		if (filename.startsWith('http://') || filename.startsWith('https://')) {
-			return filename;
-		}
-		return `http://localhost:3000/uploads/${filename}`;
-	}
 
 	return (
 		<div className="w-full h-[500px] md:h-[600px] rounded-2xl overflow-hidden border border-border">
@@ -150,7 +212,7 @@ export function ProfileMap({ profiles, userLocation, onProfileClick }: ProfileMa
 					<Marker
 						position={[userLocation.lat, userLocation.lng]}
 						icon={L.divIcon({
-							className: 'user-marker',
+							className: 'user-location-marker',
 							html: `
 								<div style="
 									width: 20px;
@@ -182,42 +244,53 @@ export function ProfileMap({ profiles, userLocation, onProfileClick }: ProfileMa
 							<Marker
 								key={key}
 								position={[lat, lng]}
-								icon={createClusterIcon(groupProfiles.length)}
+								icon={createClusterIcon(groupProfiles)}
 							>
 								<Popup>
-									<div className="max-h-48 overflow-y-auto">
-										<p className="font-medium mb-2">
+									<div className="max-h-60 overflow-y-auto min-w-[200px]">
+										<p className="font-semibold text-gray-700 mb-3 pb-2 border-b">
 											{groupProfiles.length} {t('discover.profilesHere')}
 										</p>
-										{groupProfiles.map((profile) => {
-											const photoUrl = getPhotoUrl(profile.profilePhoto);
-											return (
-												<div
-													key={profile.id}
-													onClick={() => onProfileClick(profile.id)}
-													className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded cursor-pointer"
-												>
-													{photoUrl ? (
-														<img
-															src={photoUrl}
-															alt={profile.firstName}
-															className="w-8 h-8 rounded-full object-cover"
-														/>
-													) : (
-														<div className="w-8 h-8 rounded-full bg-gray-200" />
-													)}
-													<div>
-														<p className="font-medium text-sm">
-															{profile.firstName}
-															{profile.age && `, ${profile.age}`}
-														</p>
-														<p className="text-xs text-gray-500">
-															🔥 {profile.fameRating}
-														</p>
+										<div className="space-y-2">
+											{groupProfiles.map((profile) => {
+												const photoUrl = getPhotoUrl(profile.profilePhoto);
+												return (
+													<div
+														key={profile.id}
+														onClick={() => onProfileClick(profile.id)}
+														className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors"
+													>
+														{photoUrl ? (
+															<img
+																src={photoUrl}
+																alt={profile.firstName}
+																className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+															/>
+														) : (
+															<div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+																<span className="text-gray-400 text-sm">
+																	?
+																</span>
+															</div>
+														)}
+														<div className="min-w-0">
+															<p className="font-medium text-gray-900 truncate">
+																{profile.firstName}
+																{profile.age && `, ${profile.age}`}
+															</p>
+															<div className="flex items-center gap-2 text-xs text-gray-500">
+																<span>🔥 {profile.fameRating}</span>
+																{profile.isOnline && (
+																	<span className="text-green-500">
+																		● En ligne
+																	</span>
+																)}
+															</div>
+														</div>
 													</div>
-												</div>
-											);
-										})}
+												);
+											})}
+										</div>
 									</div>
 								</Popup>
 							</Marker>
@@ -231,47 +304,47 @@ export function ProfileMap({ profiles, userLocation, onProfileClick }: ProfileMa
 							<Marker
 								key={profile.id}
 								position={[lat, lng]}
-								icon={createProfileIcon(profile.isOnline)}
+								icon={createProfileIcon(photoUrl, profile.isOnline)}
 							>
 								<Popup>
 									<div
 										onClick={() => onProfileClick(profile.id)}
-										className="cursor-pointer min-w-[150px]"
+										className="cursor-pointer min-w-[180px]"
 									>
 										<div className="flex items-center gap-3">
 											{photoUrl ? (
 												<img
 													src={photoUrl}
 													alt={profile.firstName}
-													className="w-12 h-12 rounded-full object-cover"
+													className="w-14 h-14 rounded-full object-cover flex-shrink-0"
 												/>
 											) : (
-												<div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
-													<span className="text-gray-400 text-lg">?</span>
+												<div className="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+													<span className="text-gray-400 text-xl">?</span>
 												</div>
 											)}
-											<div>
-												<p className="font-bold">
+											<div className="min-w-0">
+												<p className="font-bold text-gray-900">
 													{profile.firstName}
 													{profile.age && `, ${profile.age}`}
 												</p>
 												{profile.city && (
-													<p className="text-sm text-gray-600">
+													<p className="text-sm text-gray-600 truncate">
 														{profile.city}
 													</p>
 												)}
-												<p className="text-sm">
-													🔥 {profile.fameRating}
+												<div className="flex items-center gap-2 text-sm">
+													<span>🔥 {profile.fameRating}</span>
 													{profile.commonTagsCount > 0 && (
-														<span className="ml-2 text-primary">
+														<span className="text-primary">
 															• {profile.commonTagsCount}{' '}
 															{t('discover.commonTags')}
 														</span>
 													)}
-												</p>
+												</div>
 											</div>
 										</div>
-										<p className="text-xs text-primary mt-2 text-center">
+										<p className="text-xs text-primary mt-2 text-center font-medium">
 											{t('discover.clickToView')}
 										</p>
 									</div>

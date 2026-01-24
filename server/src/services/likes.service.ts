@@ -55,9 +55,24 @@ export const createLike = async (fromUserId: number, toUserId: number): Promise<
 	// Recalcule le fame rating de l'utilisateur liké
 	await recalculateFameRating(toUserId);
 
-	// Si c'est un match, recalcule aussi pour celui qui vient de liker
+	// Supprime les anciennes notifications like/unlike de ce même utilisateur
+	await pool.query(
+		`DELETE FROM notifications
+		 WHERE user_id = ? AND from_user_id = ? AND type IN ('like', 'unlike')`,
+		[toUserId, fromUserId]
+	);
+
 	if (isMatch) {
+		// Recalcule aussi pour celui qui vient de liker
 		await recalculateFameRating(fromUserId);
+
+		// Supprime les anciennes notifications like de l'autre côté aussi
+		await pool.query(
+			`DELETE FROM notifications
+			 WHERE user_id = ? AND from_user_id = ? AND type = 'like'`,
+			[fromUserId, toUserId]
+		);
+
 		// Notification match pour les deux utilisateurs
 		await createNotification(fromUserId, 'match', toUserId);
 		await createNotification(toUserId, 'match', fromUserId);
@@ -88,12 +103,28 @@ export const removeLike = async (fromUserId: number, toUserId: number): Promise<
 	// Recalcule le fame rating de l'utilisateur unliké
 	await recalculateFameRating(toUserId);
 
-	// Si c'était un match, recalcule aussi pour celui qui unlike et notifie
+	// Supprime les notifications like/match liées à cette relation
+	await pool.query(
+		`DELETE FROM notifications
+		 WHERE user_id = ? AND from_user_id = ? AND type IN ('like', 'match')`,
+		[toUserId, fromUserId]
+	);
+
 	if (wasMatch) {
+		// Recalcule aussi pour celui qui unlike
 		await recalculateFameRating(fromUserId);
-		// Notification unlike
+
+		// Supprime la notification de match chez l'autre utilisateur
+		await pool.query(
+			`DELETE FROM notifications
+			 WHERE user_id = ? AND from_user_id = ? AND type = 'match'`,
+			[fromUserId, toUserId]
+		);
+
+		// Notification unlike seulement si c'était un match (connexion perdue)
 		await createNotification(toUserId, 'unlike', fromUserId);
 	}
+	// Si ce n'était pas un match, pas de notification unlike
 
 	return { success: true, isMatch: false };
 };
