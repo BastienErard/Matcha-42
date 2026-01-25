@@ -121,7 +121,9 @@ export const login = async (
 
 // Déconnecte un utilisateur
 export const logout = async (userId: number): Promise<void> => {
-	await pool.query('UPDATE users SET is_online = FALSE WHERE id = ?', [userId]);
+	await pool.query('UPDATE users SET is_online = FALSE, last_login = NOW() WHERE id = ?', [
+		userId,
+	]);
 };
 
 // Génère un token de reset et l'enregistre en BDD

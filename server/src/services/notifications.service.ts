@@ -1,5 +1,6 @@
 import pool from '../config/database';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
+import { emitNotification } from '../socket/emitter';
 
 interface Notification {
 	id: number;
@@ -81,15 +82,47 @@ export const markAllAsRead = async (userId: number): Promise<number> => {
 	return result.affectedRows;
 };
 
-// Crée une notification (utilisé par les autres services)
+// Crée une notification et l'émet en temps réel
 export const createNotification = async (
 	userId: number,
 	type: 'like' | 'unlike' | 'visit' | 'message' | 'match',
 	fromUserId: number
-): Promise<void> => {
-	await pool.query('INSERT INTO notifications (user_id, type, from_user_id) VALUES (?, ?, ?)', [
-		userId,
-		type,
-		fromUserId,
-	]);
+): Promise<number> => {
+	// Insère la notification en base
+	const [result] = await pool.query<ResultSetHeader>(
+		'INSERT INTO notifications (user_id, type, from_user_id) VALUES (?, ?, ?)',
+		[userId, type, fromUserId]
+	);
+
+	const notificationId = result.insertId;
+
+	// Récupère les infos de l'utilisateur source pour l'émission temps réel
+	const [userRows] = await pool.query<RowDataPacket[]>(
+		`SELECT
+			u.id,
+			u.username,
+			u.first_name,
+			(SELECT filename FROM photos WHERE user_id = u.id AND is_profile_picture = TRUE LIMIT 1) as profile_photo
+		FROM users u
+		WHERE u.id = ?`,
+		[fromUserId]
+	);
+
+	// Émet la notification en temps réel si l'utilisateur source existe
+	if (userRows.length > 0) {
+		const fromUser = userRows[0];
+		emitNotification(userId, {
+			id: notificationId,
+			type,
+			fromUser: {
+				id: fromUser.id,
+				username: fromUser.username,
+				firstName: fromUser.first_name,
+				profilePhoto: fromUser.profile_photo,
+			},
+			createdAt: new Date(),
+		});
+	}
+
+	return notificationId;
 };
