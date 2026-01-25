@@ -1,22 +1,26 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { verifyToken } from '../utils/jwt';
 import pool from '../config/database';
+import * as cookie from 'cookie';
+import { emitOnlineStatus } from './emitter';
 
 // Map pour associer un userId à ses sockets actifs
 const userSockets = new Map<number, Set<string>>();
 
-// Met à jour le statut en ligne dans la base de données
+// Met à jour le statut en ligne dans la base de données et émet l'événement
 const updateOnlineStatus = async (userId: number, isOnline: boolean): Promise<void> => {
 	try {
 		if (isOnline) {
 			await pool.query('UPDATE users SET is_online = TRUE WHERE id = ?', [userId]);
 		} else {
-			// Quand l'utilisateur se déconnecte, on met aussi à jour last_login
 			await pool.query(
 				'UPDATE users SET is_online = FALSE, last_login = NOW() WHERE id = ?',
 				[userId]
 			);
 		}
+
+		// Émet le changement de statut à tous les utilisateurs connectés
+		emitOnlineStatus(userId, isOnline);
 	} catch (error) {
 		console.error('[Socket.io] Erreur mise à jour statut en ligne:', error);
 	}
@@ -25,7 +29,12 @@ const updateOnlineStatus = async (userId: number, isOnline: boolean): Promise<vo
 export const setupSocket = (io: SocketIOServer): void => {
 	// Middleware d'authentification Socket.io
 	io.use((socket, next) => {
-		const token = socket.handshake.auth.token;
+		let token = socket.handshake.auth.token;
+
+		if (!token && socket.handshake.headers.cookie) {
+			const cookies = cookie.parse(socket.handshake.headers.cookie);
+			token = cookies.token;
+		}
 
 		if (!token) {
 			return next(new Error('AUTHENTICATION_REQUIRED'));
@@ -42,16 +51,13 @@ export const setupSocket = (io: SocketIOServer): void => {
 			socket.data.userId = decoded.userId;
 			socket.data.username = decoded.username;
 			next();
-		} catch (error) {
+		} catch {
 			return next(new Error('INVALID_TOKEN'));
 		}
 	});
 
 	io.on('connection', async (socket: Socket) => {
 		const userId = socket.data.userId as number;
-		const username = socket.data.username as string;
-
-		console.log(`[Socket.io] ${username} (ID: ${userId}) connecté - Socket: ${socket.id}`);
 
 		// Premier socket de cet utilisateur ? → passe en ligne
 		const isFirstConnection = !userSockets.has(userId) || userSockets.get(userId)!.size === 0;
@@ -72,10 +78,6 @@ export const setupSocket = (io: SocketIOServer): void => {
 
 		// Gestion de la déconnexion
 		socket.on('disconnect', async () => {
-			console.log(
-				`[Socket.io] ${username} (ID: ${userId}) déconnecté - Socket: ${socket.id}`
-			);
-
 			// Retire le socket de la liste
 			const sockets = userSockets.get(userId);
 			if (sockets) {

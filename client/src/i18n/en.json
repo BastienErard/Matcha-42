@@ -322,5 +322,24 @@
 	"notFound": {
 		"title": "Page not found",
 		"message": "This page doesn't exist or has been moved."
+	},
+	"chat": {
+		"title": "Messages",
+		"noConversations": "No conversations",
+		"noMessages": "Start the conversation!",
+		"placeholder": "Write your message...",
+		"send": "Send",
+		"online": "Online",
+		"offline": "Offline",
+		"you": "You",
+		"yesterday": "Yesterday",
+		"selectConversation": "Select a conversation",
+		"errors": {
+			"USERS_NOT_CONNECTED": "You must match to chat",
+			"YOU_ARE_BLOCKED": "This user has blocked you",
+			"USER_BLOCKED": "You have blocked this user",
+			"CONTENT_REQUIRED": "Message cannot be empty",
+			"CONTENT_TOO_LONG": "Message too long (max 2000 characters)"
+		}
 	}
 }

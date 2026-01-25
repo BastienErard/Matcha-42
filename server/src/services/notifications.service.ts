@@ -87,8 +87,8 @@ export const createNotification = async (
 	userId: number,
 	type: 'like' | 'unlike' | 'visit' | 'message' | 'match',
 	fromUserId: number
-): Promise<number> => {
-	// Insère la notification en base
+): Promise<void> => {
+	// Insère la notification en BDD
 	const [result] = await pool.query<ResultSetHeader>(
 		'INSERT INTO notifications (user_id, type, from_user_id) VALUES (?, ?, ?)',
 		[userId, type, fromUserId]
@@ -96,8 +96,8 @@ export const createNotification = async (
 
 	const notificationId = result.insertId;
 
-	// Récupère les infos de l'utilisateur source pour l'émission temps réel
-	const [userRows] = await pool.query<RowDataPacket[]>(
+	// Récupère les infos de l'expéditeur pour l'émission temps réel
+	const [fromUserRows] = await pool.query<RowDataPacket[]>(
 		`SELECT
 			u.id,
 			u.username,
@@ -108,9 +108,10 @@ export const createNotification = async (
 		[fromUserId]
 	);
 
-	// Émet la notification en temps réel si l'utilisateur source existe
-	if (userRows.length > 0) {
-		const fromUser = userRows[0];
+	if (fromUserRows.length > 0) {
+		const fromUser = fromUserRows[0];
+
+		// Émet la notification via Socket.io
 		emitNotification(userId, {
 			id: notificationId,
 			type,
@@ -123,6 +124,4 @@ export const createNotification = async (
 			createdAt: new Date(),
 		});
 	}
-
-	return notificationId;
 };

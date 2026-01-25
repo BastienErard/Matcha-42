@@ -322,5 +322,24 @@
 	"notFound": {
 		"title": "Page introuvable",
 		"message": "Cette page n'existe pas ou a été déplacée."
+	},
+	"chat": {
+		"title": "Messages",
+		"noConversations": "Aucune conversation",
+		"noMessages": "Commencez la conversation !",
+		"placeholder": "Écrivez votre message...",
+		"send": "Envoyer",
+		"online": "En ligne",
+		"offline": "Hors ligne",
+		"you": "Vous",
+		"yesterday": "Hier",
+		"selectConversation": "Sélectionnez une conversation",
+		"errors": {
+			"USERS_NOT_CONNECTED": "Vous devez matcher pour discuter",
+			"YOU_ARE_BLOCKED": "Cet utilisateur vous a bloqué",
+			"USER_BLOCKED": "Vous avez bloqué cet utilisateur",
+			"CONTENT_REQUIRED": "Le message ne peut pas être vide",
+			"CONTENT_TOO_LONG": "Message trop long (max 2000 caractères)"
+		}
 	}
 }

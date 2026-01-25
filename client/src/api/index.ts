@@ -5,3 +5,4 @@ export * from './location';
 export * from './users';
 export * from './browse';
 export * from './notifications';
+export * from './chat';

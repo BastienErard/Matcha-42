@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '../../hooks/useTranslation';
+import { useSocket } from '../../hooks/useSocket';
 import { UserProfileModal } from './UserProfileModal';
 import {
 	getNotifications,
@@ -21,13 +22,26 @@ export function NotificationDropdown() {
 	const [isLoading, setIsLoading] = useState(false);
 	const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
 
-	// Charge le compteur au montage et périodiquement
+	// Socket.io pour les notifications temps réel
+	useSocket({
+		onNotification: (socketNotification) => {
+			// Ajoute la notification en haut de la liste
+			const newNotif: Notification = {
+				id: socketNotification.id,
+				type: socketNotification.type,
+				isRead: false,
+				createdAt: socketNotification.createdAt,
+				fromUser: socketNotification.fromUser,
+			};
+
+			setNotifications((prev) => [newNotif, ...prev.slice(0, 19)]); // Garde max 20
+			setUnreadCount((prev) => prev + 1);
+		},
+	});
+
+	// Charge le compteur au montage
 	useEffect(() => {
 		loadUnreadCount();
-
-		// Rafraîchit toutes les 30 secondes (en attendant Socket.io)
-		const interval = setInterval(loadUnreadCount, 30000);
-		return () => clearInterval(interval);
 	}, []);
 
 	// Ferme le dropdown si on clique en dehors
@@ -278,6 +292,7 @@ export function NotificationDropdown() {
 					</div>
 				</div>
 			)}
+
 			{/* Modal profil */}
 			<UserProfileModal
 				userId={selectedProfileId || 0}

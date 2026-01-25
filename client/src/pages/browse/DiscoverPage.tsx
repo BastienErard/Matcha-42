@@ -3,6 +3,7 @@ import { Layout } from '../../components/layout';
 import { useTranslation } from '../../hooks/useTranslation';
 import { translateTag } from '../../utils/tags';
 import { UserProfileModal, ProfileMap } from '../../components/common';
+import { useSocket } from '../../hooks/useSocket';
 import {
 	getSuggestions,
 	getTags,
@@ -71,6 +72,20 @@ export function DiscoverPage() {
 			);
 		}
 	}, []);
+
+	// Socket.io pour le statut en ligne temps réel
+	useSocket({
+		onOnlineStatus: (status) => {
+			// Met à jour le statut dans la liste des profils
+			setProfiles((prev) =>
+				prev.map((profile) =>
+					profile.id === status.userId
+						? { ...profile, isOnline: status.isOnline }
+						: profile
+				)
+			);
+		},
+	});
 
 	async function loadTags() {
 		const result = await getTags();

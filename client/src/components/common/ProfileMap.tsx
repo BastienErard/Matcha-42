@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -149,13 +149,15 @@ interface ProfileMapProps {
 	onProfileClick: (profileId: number) => void;
 }
 
-// Composant pour recentrer la carte
+// Composant pour recentrer la carte (seulement au premier chargement)
 function MapController({ center }: { center: [number, number] | null }) {
 	const map = useMap();
+	const hasInitialized = useRef(false);
 
 	useEffect(() => {
-		if (center) {
+		if (center && !hasInitialized.current) {
 			map.setView(center, 10);
+			hasInitialized.current = true;
 		}
 	}, [center, map]);
 

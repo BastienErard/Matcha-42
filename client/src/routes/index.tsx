@@ -18,6 +18,7 @@ import { ResetPasswordPage } from '../pages/auth/ResetPasswordPage';
 import { DiscoverPage } from '../pages/browse/DiscoverPage';
 import { OnboardingPage } from '../pages/onboarding/OnboardingPage';
 import { ProfilePage } from '../pages/profile/ProfilePage';
+import { MessagesPage } from '../pages/messages/MessagesPage';
 
 export function AppRouter() {
 	return (
@@ -94,6 +95,14 @@ export function AppRouter() {
 					element={
 						<ProtectedRoute>
 							<ProfilePage />
+						</ProtectedRoute>
+					}
+				/>
+				<Route
+					path="/messages"
+					element={
+						<ProtectedRoute>
+							<MessagesPage />
 						</ProtectedRoute>
 					}
 				/>

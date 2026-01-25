@@ -1,6 +1,7 @@
 import pool from '../config/database';
 import { RowDataPacket } from 'mysql2';
 import { recalculateFameRating } from './famerating.service';
+import * as notificationsService from './notifications.service';
 
 interface LikeResult {
 	success: boolean;
@@ -74,11 +75,11 @@ export const createLike = async (fromUserId: number, toUserId: number): Promise<
 		);
 
 		// Notification match pour les deux utilisateurs
-		await createNotification(fromUserId, 'match', toUserId);
-		await createNotification(toUserId, 'match', fromUserId);
+		await notificationsService.createNotification(fromUserId, 'match', toUserId);
+		await notificationsService.createNotification(toUserId, 'match', fromUserId);
 	} else {
 		// Notification like pour l'utilisateur liké
-		await createNotification(toUserId, 'like', fromUserId);
+		await notificationsService.createNotification(toUserId, 'like', fromUserId);
 	}
 
 	return { success: true, isMatch };
@@ -121,23 +122,9 @@ export const removeLike = async (fromUserId: number, toUserId: number): Promise<
 			[fromUserId, toUserId]
 		);
 
-		// Notification unlike seulement si c'était un match (connexion perdue)
-		await createNotification(toUserId, 'unlike', fromUserId);
+		// Notification unlike seulement si c'était un match
+		await notificationsService.createNotification(toUserId, 'unlike', fromUserId);
 	}
-	// Si ce n'était pas un match, pas de notification unlike
 
 	return { success: true, isMatch: false };
-};
-
-// Crée une notification
-const createNotification = async (
-	userId: number,
-	type: 'like' | 'unlike' | 'visit' | 'message' | 'match',
-	fromUserId: number
-): Promise<void> => {
-	await pool.query('INSERT INTO notifications (user_id, type, from_user_id) VALUES (?, ?, ?)', [
-		userId,
-		type,
-		fromUserId,
-	]);
 };

@@ -16,6 +16,15 @@ export const emitToUser = (userId: number, event: string, data: unknown): void =
 	io.to(`user:${userId}`).emit(event, data);
 };
 
+// Émet à tous les utilisateurs connectés
+export const emitToAll = (event: string, data: unknown): void => {
+	if (!io) {
+		console.warn('[Socket.io] Instance non initialisée, événement ignoré');
+		return;
+	}
+	io.emit(event, data);
+};
+
 // Émet une notification temps réel
 export const emitNotification = (
 	userId: number,
@@ -49,7 +58,7 @@ export const emitMessage = (
 	emitToUser(userId, 'message', message);
 };
 
-// Émet une mise à jour du statut en ligne
+// Émet une mise à jour du statut en ligne à tous les utilisateurs
 export const emitOnlineStatus = (userId: number, isOnline: boolean): void => {
-	emitToUser(userId, 'onlineStatus', { userId, isOnline });
+	emitToAll('onlineStatus', { userId, isOnline });
 };
