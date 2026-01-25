@@ -62,3 +62,12 @@ export const emitMessage = (
 export const emitOnlineStatus = (userId: number, isOnline: boolean): void => {
 	emitToAll('onlineStatus', { userId, isOnline });
 };
+
+// Émet un événement de blocage (pour masquer le statut en ligne chez l'utilisateur bloqué)
+export const emitBlockStatus = (
+	blockedUserId: number,
+	blockerUserId: number,
+	isBlocked: boolean
+): void => {
+	emitToUser(blockedUserId, 'blockStatus', { userId: blockerUserId, isBlocked });
+};

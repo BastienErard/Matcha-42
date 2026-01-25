@@ -2,6 +2,7 @@ import pool from '../config/database';
 import { RowDataPacket } from 'mysql2';
 import { recalculateFameRating } from './famerating.service';
 import { calculateAge } from '../utils/date';
+import { emitBlockStatus } from '../socket/emitter';
 
 interface BlockResult {
 	success: boolean;
@@ -44,6 +45,9 @@ export const createBlock = async (blockerId: number, blockedId: number): Promise
 	// Recalcule le fame rating de l'utilisateur bloqué
 	await recalculateFameRating(blockedId);
 
+	// Notifie l'utilisateur bloqué pour masquer le statut en ligne du bloqueur
+	emitBlockStatus(blockedId, blockerId, true);
+
 	return { success: true };
 };
 
@@ -62,6 +66,9 @@ export const removeBlock = async (blockerId: number, blockedId: number): Promise
 
 	// Recalcule le fame rating de l'utilisateur débloqué
 	await recalculateFameRating(blockedId);
+
+	// Notifie l'utilisateur débloqué pour réafficher le statut en ligne
+	emitBlockStatus(blockedId, blockerId, false);
 
 	return { success: true };
 };

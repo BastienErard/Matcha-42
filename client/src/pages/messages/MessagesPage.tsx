@@ -81,10 +81,37 @@ export function MessagesPage() {
 		},
 		onOnlineStatus: (status) => {
 			// Met à jour le statut dans la conversation sélectionnée
+			// Ignore si l'utilisateur nous a bloqué
+			if (selectedConversation && selectedConversation.otherUser.id === status.userId) {
+				setSelectedConversation((prev) =>
+					prev && !prev.otherUser.isBlockedByOther
+						? { ...prev, otherUser: { ...prev.otherUser, isOnline: status.isOnline } }
+						: prev
+				);
+			}
+
+			// Met à jour dans la liste des conversations (sauf si bloqué)
+			setConversations((prev) =>
+				prev.map((conv) =>
+					conv.otherUser.id === status.userId && !conv.otherUser.isBlockedByOther
+						? { ...conv, otherUser: { ...conv.otherUser, isOnline: status.isOnline } }
+						: conv
+				)
+			);
+		},
+		onBlockStatus: (status) => {
+			// Met à jour le statut si blocage ou déblocage
 			if (selectedConversation && selectedConversation.otherUser.id === status.userId) {
 				setSelectedConversation((prev) =>
 					prev
-						? { ...prev, otherUser: { ...prev.otherUser, isOnline: status.isOnline } }
+						? {
+								...prev,
+								otherUser: {
+									...prev.otherUser,
+									isBlockedByOther: status.isBlocked,
+									isOnline: status.isBlocked ? false : prev.otherUser.isOnline,
+								},
+							}
 						: null
 				);
 			}
@@ -93,7 +120,14 @@ export function MessagesPage() {
 			setConversations((prev) =>
 				prev.map((conv) =>
 					conv.otherUser.id === status.userId
-						? { ...conv, otherUser: { ...conv.otherUser, isOnline: status.isOnline } }
+						? {
+								...conv,
+								otherUser: {
+									...conv.otherUser,
+									isBlockedByOther: status.isBlocked,
+									isOnline: status.isBlocked ? false : conv.otherUser.isOnline,
+								},
+							}
 						: conv
 				)
 			);

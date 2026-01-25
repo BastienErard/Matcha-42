@@ -22,9 +22,24 @@ export function NotificationDropdown() {
 	const [isLoading, setIsLoading] = useState(false);
 	const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
 
+	// Protection contre le double traitement des notifications (StrictMode)
+	const processedNotificationIds = useRef<Set<number>>(new Set());
+
 	// Socket.io pour les notifications temps réel
 	useSocket({
-		onNotification: (socketNotification) => {
+		onNotification: async (socketNotification) => {
+			// Évite le double traitement (StrictMode ou multiple renders)
+			if (processedNotificationIds.current.has(socketNotification.id)) {
+				return;
+			}
+			processedNotificationIds.current.add(socketNotification.id);
+
+			// Nettoie les anciens IDs pour éviter une fuite mémoire (garde les 100 derniers)
+			if (processedNotificationIds.current.size > 100) {
+				const idsArray = Array.from(processedNotificationIds.current);
+				processedNotificationIds.current = new Set(idsArray.slice(-50));
+			}
+
 			const newNotif: Notification = {
 				id: socketNotification.id,
 				type: socketNotification.type,
@@ -43,17 +58,22 @@ export function NotificationDropdown() {
 				);
 
 				if (existingIndex !== -1) {
-					// Remplace l'ancienne notification et la met en haut (pas de nouvel incrément)
+					// Remplace l'ancienne notification et la met en haut
 					const filtered = prev.filter((_, index) => index !== existingIndex);
 					return [newNotif, ...filtered.slice(0, 19)];
 				}
 
-				// Nouvelle notification → incrémente le compteur
-				setUnreadCount((c) => c + 1);
 				return [newNotif, ...prev.slice(0, 19)];
 			});
+
+			// Synchronise le compteur avec le serveur (source de vérité)
+			const result = await getUnreadCount();
+			if (result.success && result.data) {
+				setUnreadCount(result.data.unreadCount);
+			}
 		},
 	});
+
 	// Charge le compteur au montage
 	useEffect(() => {
 		loadUnreadCount();

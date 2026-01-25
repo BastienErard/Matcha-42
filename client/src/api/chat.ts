@@ -8,6 +8,7 @@ export interface ConversationUser {
 	profilePhoto: string | null;
 	isOnline: boolean;
 	lastLogin: string | null;
+	isBlockedByOther?: boolean;
 }
 
 export interface Conversation {

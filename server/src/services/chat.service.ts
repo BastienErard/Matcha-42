@@ -114,6 +114,7 @@ export const getConversations = async (userId: number): Promise<Conversation[]> 
 			profilePhoto: row.profile_photo,
 			isOnline: row.is_blocked_by_other ? false : Boolean(row.is_online),
 			lastLogin: row.last_login,
+			isBlockedByOther: Boolean(row.is_blocked_by_other),
 		},
 		lastMessage: row.last_message_content
 			? {

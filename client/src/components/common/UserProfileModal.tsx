@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from '../../hooks/useTranslation';
 import { translateTag } from '../../utils/tags';
 import {
@@ -41,11 +41,22 @@ export function UserProfileModal({
 	const [actionError, setActionError] = useState('');
 	const [showMatchAlert, setShowMatchAlert] = useState(false);
 
+	// Protection contre le double appel en StrictMode
+	const loadedUserIdRef = useRef<number | null>(null);
+
 	useEffect(() => {
-		if (isOpen && userId) {
+		if (isOpen && userId && loadedUserIdRef.current !== userId) {
+			loadedUserIdRef.current = userId;
 			loadProfile();
 		}
 	}, [isOpen, userId]);
+
+	// Reset quand la modal se ferme
+	useEffect(() => {
+		if (!isOpen) {
+			loadedUserIdRef.current = null;
+		}
+	}, [isOpen]);
 
 	useEffect(() => {
 		setCurrentPhotoIndex(0);
@@ -195,7 +206,7 @@ export function UserProfileModal({
 	if (!isOpen) return null;
 
 	return (
-<div className="fixed inset-0 z-[9999] flex items-center justify-center">
+		<div className="fixed inset-0 z-[9999] flex items-center justify-center">
 			{/* Overlay */}
 			<div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 

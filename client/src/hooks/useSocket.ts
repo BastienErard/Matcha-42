@@ -28,10 +28,16 @@ interface SocketOnlineStatus {
 	isOnline: boolean;
 }
 
+interface SocketBlockStatus {
+	userId: number;
+	isBlocked: boolean;
+}
+
 interface UseSocketOptions {
 	onNotification?: (notification: SocketNotification) => void;
 	onMessage?: (message: SocketMessage) => void;
 	onOnlineStatus?: (status: SocketOnlineStatus) => void;
+	onBlockStatus?: (status: SocketBlockStatus) => void;
 }
 
 // Singleton pour éviter les connexions multiples
@@ -84,10 +90,15 @@ export function useSocket(options: UseSocketOptions = {}) {
 			optionsRef.current.onOnlineStatus?.(status);
 		};
 
+		const handleBlockStatus = (status: SocketBlockStatus) => {
+			optionsRef.current.onBlockStatus?.(status);
+		};
+
 		// Écoute les événements
 		socket.on('notification', handleNotification);
 		socket.on('message', handleMessage);
 		socket.on('onlineStatus', handleOnlineStatus);
+		socket.on('blockStatus', handleBlockStatus);
 
 		return () => {
 			connectionCount--;
@@ -96,6 +107,7 @@ export function useSocket(options: UseSocketOptions = {}) {
 			socket.off('notification', handleNotification);
 			socket.off('message', handleMessage);
 			socket.off('onlineStatus', handleOnlineStatus);
+			socket.off('blockStatus', handleBlockStatus);
 
 			// Déconnecte avec un délai pour permettre le remount en StrictMode
 			if (connectionCount === 0) {
@@ -116,4 +128,4 @@ export function useSocket(options: UseSocketOptions = {}) {
 	return { socket: globalSocket, isConnected };
 }
 
-export type { SocketNotification, SocketMessage, SocketOnlineStatus };
+export type { SocketNotification, SocketMessage, SocketOnlineStatus, SocketBlockStatus };
