@@ -35,6 +35,11 @@ export const createLike = async (fromUserId: number, toUserId: number): Promise<
 		return { success: false, isMatch: false, code: 'CANNOT_LIKE_YOURSELF' };
 	}
 
+	// Vérifie que l'utilisateur a une photo de profil
+	if (!(await hasProfilePicture(fromUserId))) {
+		return { success: false, isMatch: false, code: 'PROFILE_PICTURE_REQUIRED' };
+	}
+
 	// Vérifie qu'on n'est pas bloqué par l'utilisateur cible
 	if (await isBlocked(toUserId, fromUserId)) {
 		return { success: false, isMatch: false, code: 'USER_NOT_FOUND' };
@@ -134,4 +139,13 @@ export const removeLike = async (fromUserId: number, toUserId: number): Promise<
 	}
 
 	return { success: true, isMatch: false };
+};
+
+// Vérifie si un utilisateur a une photo de profil
+const hasProfilePicture = async (userId: number): Promise<boolean> => {
+	const [rows] = await pool.query<RowDataPacket[]>(
+		'SELECT 1 FROM photos WHERE user_id = ? AND is_profile_picture = TRUE LIMIT 1',
+		[userId]
+	);
+	return rows.length > 0;
 };
