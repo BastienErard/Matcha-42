@@ -25,7 +25,6 @@ export function NotificationDropdown() {
 	// Socket.io pour les notifications temps réel
 	useSocket({
 		onNotification: (socketNotification) => {
-			// Ajoute la notification en haut de la liste
 			const newNotif: Notification = {
 				id: socketNotification.id,
 				type: socketNotification.type,
@@ -34,11 +33,27 @@ export function NotificationDropdown() {
 				fromUser: socketNotification.fromUser,
 			};
 
-			setNotifications((prev) => [newNotif, ...prev.slice(0, 19)]); // Garde max 20
-			setUnreadCount((prev) => prev + 1);
+			setNotifications((prev) => {
+				// Vérifie si une notification non lue du même type et même utilisateur existe
+				const existingIndex = prev.findIndex(
+					(n) =>
+						n.type === socketNotification.type &&
+						n.fromUser?.id === socketNotification.fromUser.id &&
+						!n.isRead
+				);
+
+				if (existingIndex !== -1) {
+					// Remplace l'ancienne notification et la met en haut (pas de nouvel incrément)
+					const filtered = prev.filter((_, index) => index !== existingIndex);
+					return [newNotif, ...filtered.slice(0, 19)];
+				}
+
+				// Nouvelle notification → incrémente le compteur
+				setUnreadCount((c) => c + 1);
+				return [newNotif, ...prev.slice(0, 19)];
+			});
 		},
 	});
-
 	// Charge le compteur au montage
 	useEffect(() => {
 		loadUnreadCount();

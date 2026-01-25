@@ -96,12 +96,13 @@ export const getConversations = async (userId: number): Promise<Conversation[]> 
 			(SELECT sender_id FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message_sender_id,
 			(SELECT created_at FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message_created_at,
 			(SELECT is_read FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message_is_read,
-			(SELECT COUNT(*) FROM messages WHERE conversation_id = c.id AND sender_id != ? AND is_read = FALSE) as unread_count
+			(SELECT COUNT(*) FROM messages WHERE conversation_id = c.id AND sender_id != ? AND is_read = FALSE) as unread_count,
+			(SELECT 1 FROM blocks WHERE blocker_id = CASE WHEN c.user1_id = ? THEN c.user2_id ELSE c.user1_id END AND blocked_user_id = ? LIMIT 1) as is_blocked_by_other
 		FROM conversations c
 		JOIN users u ON u.id = CASE WHEN c.user1_id = ? THEN c.user2_id ELSE c.user1_id END
 		WHERE c.user1_id = ? OR c.user2_id = ?
 		ORDER BY c.updated_at DESC`,
-		[userId, userId, userId, userId, userId]
+		[userId, userId, userId, userId, userId, userId, userId]
 	);
 
 	return rows.map((row) => ({
@@ -111,7 +112,7 @@ export const getConversations = async (userId: number): Promise<Conversation[]> 
 			username: row.username,
 			firstName: row.first_name,
 			profilePhoto: row.profile_photo,
-			isOnline: Boolean(row.is_online),
+			isOnline: row.is_blocked_by_other ? false : Boolean(row.is_online),
 			lastLogin: row.last_login,
 		},
 		lastMessage: row.last_message_content
@@ -234,7 +235,14 @@ export const sendMessage = async (
 		createdAt: message.createdAt,
 	});
 
-	// Crée une notification pour le destinataire
+	// Crée ou met à jour la notification de message
+	await pool.query(
+		`DELETE FROM notifications
+	 WHERE user_id = ? AND from_user_id = ? AND type = 'message'`,
+		[receiverId, senderId]
+	);
+
+	// Crée une nouvelle notification
 	await createNotification(receiverId, 'message', senderId);
 
 	return message;
@@ -276,4 +284,39 @@ export const getTotalUnreadCount = async (userId: number): Promise<number> => {
 		[userId, userId, userId]
 	);
 	return rows[0].count;
+};
+
+// Supprime une conversation si elle est vide (aucun message)
+export const deleteConversationIfEmpty = async (
+	userId1: number,
+	userId2: number
+): Promise<boolean> => {
+	// Ordonne les IDs pour garantir l'unicité
+	const [smallerId, largerId] = userId1 < userId2 ? [userId1, userId2] : [userId2, userId1];
+
+	// Cherche la conversation
+	const [existing] = await pool.query<RowDataPacket[]>(
+		'SELECT id FROM conversations WHERE user1_id = ? AND user2_id = ?',
+		[smallerId, largerId]
+	);
+
+	if (existing.length === 0) {
+		return false;
+	}
+
+	const conversationId = existing[0].id;
+
+	// Vérifie si la conversation a des messages
+	const [messages] = await pool.query<RowDataPacket[]>(
+		'SELECT 1 FROM messages WHERE conversation_id = ? LIMIT 1',
+		[conversationId]
+	);
+
+	if (messages.length > 0) {
+		return false;
+	}
+
+	// Supprime la conversation vide
+	await pool.query('DELETE FROM conversations WHERE id = ?', [conversationId]);
+	return true;
 };

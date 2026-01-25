@@ -21,7 +21,7 @@ export const requireProfilePicture = async (
 	);
 
 	if (rows.length === 0) {
-		res.status(403).json({ code: 'PROFILE_PICTURE_REQUIRED' });
+		res.status(403).json({ code: 'PROFILE_PICTURE_MISSING' });
 		return;
 	}
 

@@ -57,7 +57,7 @@ export const completeOnboarding = async (req: Request, res: Response): Promise<v
 		}
 
 		if (!hasProfilePicture) {
-			res.status(400).json({ code: 'PROFILE_PICTURE_REQUIRED' });
+			res.status(400).json({ code: 'PROFILE_PICTURE_MISSING' });
 			return;
 		}
 

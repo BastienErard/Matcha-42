@@ -339,7 +339,8 @@
 			"YOU_ARE_BLOCKED": "Cet utilisateur vous a bloqué",
 			"USER_BLOCKED": "Vous avez bloqué cet utilisateur",
 			"CONTENT_REQUIRED": "Le message ne peut pas être vide",
-			"CONTENT_TOO_LONG": "Message trop long (max 2000 caractères)"
+			"CONTENT_TOO_LONG": "Message trop long (max 2000 caractères)",
+			"PROFILE_PICTURE_MISSING": "Vous devez avoir une photo de profil pour envoyer des messages"
 		}
 	}
 }

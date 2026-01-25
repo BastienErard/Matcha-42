@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Layout } from '../../components/layout';
 import { useTranslation } from '../../hooks/useTranslation';
 import { useSocket } from '../../hooks/useSocket';
+import { UserProfileModal } from '../../components/common';
 import {
 	getConversations,
 	getMessages,
@@ -24,6 +25,7 @@ export function MessagesPage() {
 	const [isLoadingMessages, setIsLoadingMessages] = useState(false);
 	const [isSending, setIsSending] = useState(false);
 	const [error, setError] = useState('');
+	const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
 
 	// Socket.io pour le temps réel
 	useSocket({
@@ -384,7 +386,12 @@ export function MessagesPage() {
 
 								{/* Nom et statut */}
 								<div>
-									<h2 className="font-semibold text-text-primary">
+									<h2
+										onClick={() =>
+											setSelectedProfileId(selectedConversation.otherUser.id)
+										}
+										className="font-semibold text-text-primary cursor-pointer hover:text-primary transition-colors"
+									>
 										{selectedConversation.otherUser.firstName}{' '}
 										{selectedConversation.otherUser.lastName}
 									</h2>
@@ -500,6 +507,16 @@ export function MessagesPage() {
 						</div>
 					)}
 				</div>
+				{/* Modal profil */}
+				<UserProfileModal
+					userId={selectedProfileId || 0}
+					isOpen={selectedProfileId !== null}
+					onClose={() => setSelectedProfileId(null)}
+					onUserBlocked={() => {
+						setSelectedProfileId(null);
+						loadConversations();
+					}}
+				/>
 			</div>
 		</Layout>
 	);

@@ -2,6 +2,7 @@ import pool from '../config/database';
 import { RowDataPacket } from 'mysql2';
 import { recalculateFameRating } from './famerating.service';
 import * as notificationsService from './notifications.service';
+import { getOrCreateConversation, deleteConversationIfEmpty } from './chat.service';
 
 interface LikeResult {
 	success: boolean;
@@ -74,6 +75,9 @@ export const createLike = async (fromUserId: number, toUserId: number): Promise<
 			[fromUserId, toUserId]
 		);
 
+		// Crée la conversation pour le match
+		await getOrCreateConversation(fromUserId, toUserId);
+
 		// Notification match pour les deux utilisateurs
 		await notificationsService.createNotification(fromUserId, 'match', toUserId);
 		await notificationsService.createNotification(toUserId, 'match', fromUserId);
@@ -121,6 +125,9 @@ export const removeLike = async (fromUserId: number, toUserId: number): Promise<
 			 WHERE user_id = ? AND from_user_id = ? AND type = 'match'`,
 			[fromUserId, toUserId]
 		);
+
+		// Supprime la conversation si elle est vide
+		await deleteConversationIfEmpty(fromUserId, toUserId);
 
 		// Notification unlike seulement si c'était un match
 		await notificationsService.createNotification(toUserId, 'unlike', fromUserId);
