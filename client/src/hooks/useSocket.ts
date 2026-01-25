@@ -34,9 +34,13 @@ interface UseSocketOptions {
 	onOnlineStatus?: (status: SocketOnlineStatus) => void;
 }
 
+// Singleton pour éviter les connexions multiples
+let globalSocket: Socket | null = null;
+let connectionCount = 0;
+let disconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+
 export function useSocket(options: UseSocketOptions = {}) {
 	const { user } = useAuth();
-	const socketRef = useRef<Socket | null>(null);
 	const optionsRef = useRef(options);
 
 	// Met à jour les options sans recréer la connexion
@@ -46,46 +50,70 @@ export function useSocket(options: UseSocketOptions = {}) {
 
 	useEffect(() => {
 		if (!user) {
-			// Déconnecte si pas d'utilisateur
-			if (socketRef.current) {
-				socketRef.current.disconnect();
-				socketRef.current = null;
-			}
 			return;
 		}
 
-		// Crée la connexion Socket.io
-		const socket = io('http://localhost:3000', {
-			withCredentials: true,
-			transports: ['websocket', 'polling'],
-		});
+		// Annule tout timeout de déconnexion en cours
+		if (disconnectTimeout) {
+			clearTimeout(disconnectTimeout);
+			disconnectTimeout = null;
+		}
 
-		// Écoute les notifications
-		socket.on('notification', (notification: SocketNotification) => {
+		connectionCount++;
+
+		// Crée la connexion Socket.io seulement si elle n'existe pas
+		if (!globalSocket) {
+			globalSocket = io('http://localhost:3000', {
+				withCredentials: true,
+				transports: ['websocket', 'polling'],
+			});
+		}
+
+		const socket = globalSocket;
+
+		// Handlers
+		const handleNotification = (notification: SocketNotification) => {
 			optionsRef.current.onNotification?.(notification);
-		});
+		};
 
-		// Écoute les messages
-		socket.on('message', (message: SocketMessage) => {
+		const handleMessage = (message: SocketMessage) => {
 			optionsRef.current.onMessage?.(message);
-		});
+		};
 
-		// Écoute les changements de statut en ligne
-		socket.on('onlineStatus', (status: SocketOnlineStatus) => {
+		const handleOnlineStatus = (status: SocketOnlineStatus) => {
 			optionsRef.current.onOnlineStatus?.(status);
-		});
+		};
 
-		socketRef.current = socket;
+		// Écoute les événements
+		socket.on('notification', handleNotification);
+		socket.on('message', handleMessage);
+		socket.on('onlineStatus', handleOnlineStatus);
 
 		return () => {
-			socket.disconnect();
-			socketRef.current = null;
+			connectionCount--;
+
+			// Retire les listeners
+			socket.off('notification', handleNotification);
+			socket.off('message', handleMessage);
+			socket.off('onlineStatus', handleOnlineStatus);
+
+			// Déconnecte avec un délai pour permettre le remount en StrictMode
+			if (connectionCount === 0) {
+				disconnectTimeout = setTimeout(() => {
+					if (connectionCount === 0 && globalSocket) {
+						globalSocket.disconnect();
+						globalSocket = null;
+					}
+				}, 100);
+			}
 		};
 	}, [user]);
 
 	const isConnected = useCallback(() => {
-		return socketRef.current?.connected ?? false;
+		return globalSocket?.connected ?? false;
 	}, []);
 
-	return { socket: socketRef.current, isConnected };
+	return { socket: globalSocket, isConnected };
 }
+
+export type { SocketNotification, SocketMessage, SocketOnlineStatus };
