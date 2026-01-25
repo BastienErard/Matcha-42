@@ -195,7 +195,7 @@ export function UserProfileModal({
 	if (!isOpen) return null;
 
 	return (
-		<div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 md:p-6">
+<div className="fixed inset-0 z-[9999] flex items-center justify-center">
 			{/* Overlay */}
 			<div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
