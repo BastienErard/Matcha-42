@@ -163,7 +163,7 @@ export const resetPassword = async (token: string, newPassword: string): Promise
 	const hashedPassword = await hashPassword(newPassword);
 
 	await pool.query(
-		'UPDATE users SET password_hash = ?, reset_password_token = NULL, reset_password_expires = NULL WHERE id = ?',
+		'UPDATE users SET password_hash = ?, reset_password_token = NULL, reset_password_expires = NULL, is_verified = TRUE, verification_token = NULL WHERE id = ?',
 		[hashedPassword, rows[0].id]
 	);
 
