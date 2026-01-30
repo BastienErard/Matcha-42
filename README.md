@@ -231,7 +231,7 @@ Evenements emis par le serveur :
 
 ## Auteur
 
-Projet realise par **Bastien Erard** dans le cadre du cursus 42.
+Projet realise par **Bastien Erard et Thomas Favre** dans le cadre du cursus 42. README réalisé à l'aide de Claude Code.
 
 ## Licence
 
